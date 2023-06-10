@@ -1,0 +1,3 @@
+[submodule "zeppp"]
+	path = zeppp
+	url = git@github.com:battlecoder/zeppp.git
