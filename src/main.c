@@ -15,9 +15,28 @@
 
 void main(void) {
     
-    // Set Port B to all outputs
+    // Set mclk frequency to 4MHz
+    PCON |= 1 << 3; // b3 = OSFC, 1 = 4MHz, 0 = 48 kHz
+    
+    // Setup I/O
     // 0 = output, 1 = input
-    TRISA = 0x00;
+    TRISA0 = 0b0; // I2C clock (SCL), set to output for now
+    TRISA1 = 0b0; // I2C data (SDA), set to output for now
+    TRISA2 = 0b1; // SW1 input
+    TRISA3 = 0b1; // SW2 input
+    TRISA4 = 0b1; // NC, leave as input (output buffer in Hi-Z)
+    TRISA5 = 0b1; // MCLR input
+    TRISA6 = 0b1; // NC, OSC2 pin
+    TRISA7 = 0b1; // NC, OSC1 pin
+    //
+    TRISB0 = 0b0; // Test LED
+    TRISB1 = 0b0; // HVPS enable
+    TRISB2 = 0b0; // SERDES clock
+    TRISB3 = 0b0; // SERDES blank (active low)
+    TRISB4 = 0b0; // SERDES din (also the PGM pin)
+    TRISB5 = 0b0; // SERDES latch enable (active low)
+    TRISB6 = 0b1; // Programming clock (PGC)
+    TRISB7 = 0b1; // Programming data (PGD)
     
     while (1) {
         // Turn LED on
