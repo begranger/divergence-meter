@@ -1,81 +1,81 @@
 ;**********************************************************************
-;     This file is a basic code template for assembly code generation *
+;   This file is a basic code template for assembly code generation   *
 ;   on the PIC16F628A. This file contains the basic code              *
 ;   building blocks to build upon.                                    *
-;     Refer to the MPASM User's Guide for additional information on   *
+;   Refer to the MPASM User's Guide for additional information on     *
 ;   features of the assembler (Document DS33014).                     *
-;     Refer to the respective PIC data sheet for additional           *
+;   Refer to the respective PIC data sheet for additional             *
 ;   information on the instruction set.                               *
 ;                                                                     *
 ;**********************************************************************
 ;                                                                     *
-;    Filename:        DivergenceMeter.asm                               *
-;    Date:            5-12-2012                                          *
-;    File Version:    1.05    (REMEMBER to update number in code!)      *
+;    Filename:        DivergenceMeter.asm                             *
+;    Date:            5-12-2012                                       *
+;    File Version:    1.05    (REMEMBER to update number in code!)    *
 ;                                                                     *
-;    Author:            Tom Titor                                         *
-;    Company:        /a/                                               *
+;    Author:            Tom Titor                                     *
+;    Company:        /a/                                              *
 ;                                                                     *
 ;**********************************************************************
-;    Files Required: P16F628A.INC                                      *
+;    Files Required: P16F628A.INC                                     *
 ;**********************************************************************
 ;                                                                     *
-;    Notes:    Had to take out "& _DATA_CP_OFF " from template  __CONFIG *
-;        line because it resulted in error. Why? The line was:         *
-;        __CONFIG   _CP_OFF & _DATA_CP_OFF & _LVP_OFF & _BOREN_OFF & _MCLRE_ON & _WDT_OFF & _PWRTE_ON & _INTOSC_OSC_NOCLKOUT  *
+;    Notes: Had to take out "& _DATA_CP_OFF " from template  __CONFIG *
+;           line because it resulted in error. Why? The line was:     *
+;      __CONFIG   _CP_OFF & _DATA_CP_OFF & _LVP_OFF & _BOREN_OFF & _MCLRE_ON & _WDT_OFF & _PWRTE_ON & _INTOSC_OSC_NOCLKOUT *
 ;                                                                     *
-;   Using internal oscillator 4 MHz (default)                         *
+;    Using internal oscillator 4 MHz (default)                        *
 ;                                                                     *
 ;                                                                     *
-;        0.00 Had to set MCLRE_OFF in config since that pin floats       *
-;    unconnected on my board.                                          *
-;        0.01 Had to turn comparators off to get PORTA to work as      *
-;    inputs, and then stupid typo in doing so wasted hours.              *
-;        0.1 (1/31) Able to display a digit on the tubes.              *
-;        0.2    (2/1) Able to display worldline number to all 8 tubes.      *
-;        0.3    (2/1) Testing animation of number.                          *
-;        0.37(2/2) More animation messin'                              *
-;        0.4 (2/6) Worldline number random rolls    work!                  *
-;        0.43(2/7) Adjustable brightness with fading pulse at end      *
-;        0.44(2/13) Worked on long/short button pushes.                  *
-;        0.45(2/15) Adding I2C to talk to DS1307 Real-time Clock chip  *
-;            using Andrew D. Vassallo's bit banging from piclist.com      *
-;            (2/17) Works. Long time debugging since it apparently      *
-;            MUST have the backup battery in there to work reliably.      *
-;        0.5 (2/17) Working on the Clock display and interface.          *
-;        0.6    (2/19) Clock works. Working on settings interface.          *
-;        0.7    (2/21) Basic settings done: Time / Date / Brightness.      *
-;        0.75(2/22) Added preset world lines from anime/visual novel.  *
-;        0.8    (2/25) Added manual world line entry. Added random beta      *
-;            and neg. world lines. Put useful things in subroutines.      *
-;        0.85(2/27) Date format pref (MM DD YY or DD MM YY) done.      *
-;        0.90(2/28) Tube blanking hours. Fun2 roll at top of hour.      *
-;        1.0 (3/3) Time adjustment implemented and tested.              *
-;    All originally planned features have been implemented.              *
-;        1.01 (3/22) Fixed bug in setting 12/24-hour format from       *
-;            the value stored in EEPROM location 7F.                      *
-;        1.02 (3/30) Changed so the device starts up in clock mode.      *
-;            Mainly because if there is a power outage, you don't      *
-;            want the device to wake up and stay with one number on    *
-;            the nixie tubes for an extended period.                      *
-;        1.03 (4/20) Fixed error in Year-setting routine.              *
-;        1.04 (5/11) Fixed error in error routine that reports "666"   *
-;            if the clock chip does not respond. This did not work      *
-;            right at power-up because the tube power was still off,      *
-;            so I added lines to turn tubes on to the error handler.      *
-;            ALSO added version number display. The version number      *
-;            will be displayed as long as switch 2 is held on the way  *
-;            into the Settings menu.                                      *
-;        1.05 (5/12) Works for either DS1307 or DS3232 clock chips.      *
-;                                                                      *
+;    0.00 Had to set MCLRE_OFF in config since that pin floats        *
+;         unconnected on my board.                                    *
+;    0.01 Had to turn comparators off to get PORTA to work as         *
+;         inputs, and then stupid typo in doing so wasted hours.      *
+;    0.1  (1/31) Able to display a digit on the tubes.                *
+;    0.2  (2/1)  Able to display worldline number to all 8 tubes.     *
+;    0.3  (2/1)  Testing animation of number.                         *
+;    0.37 (2/2)  More animation messin'                               *
+;    0.4  (2/6)  Worldline number random rolls    work!               *
+;    0.43 (2/7)  Adjustable brightness with fading pulse at end       *
+;    0.44 (2/13) Worked on long/short button pushes.                  *
+;    0.45 (2/15) Adding I2C to talk to DS1307 Real-time Clock chip    *
+;         using Andrew D. Vassallo's bit banging from piclist.com     *
+;         (2/17) Works. Long time debugging since it apparently       *
+;         MUST have the backup battery in there to work reliably.     *
+;    0.5  (2/17) Working on the Clock display and interface.          *
+;    0.6  (2/19) Clock works. Working on settings interface.          *
+;    0.7  (2/21) Basic settings done: Time / Date / Brightness.       *
+;    0.75 (2/22) Added preset world lines from anime/visual novel.    *
+;    0.8  (2/25) Added manual world line entry. Added random beta     *
+;         and neg. world lines. Put useful things in subroutines.     *
+;    0.85 (2/27) Date format pref (MM DD YY or DD MM YY) done.        *
+;    0.90 (2/28) Tube blanking hours. Fun2 roll at top of hour.       *
+;    1.0  (3/3) Time adjustment implemented and tested.               *
+;    All originally planned features have been implemented.           *
+;    1.01 (3/22) Fixed bug in setting 12/24-hour format from          *
+;         the value stored in EEPROM location 7F.                     *
+;    1.02 (3/30) Changed so the device starts up in clock mode.       *
+;         Mainly because if there is a power outage, you don't        *
+;         want the device to wake up and stay with one number on      *
+;         the nixie tubes for an extended period.                     *
+;    1.03 (4/20) Fixed error in Year-setting routine.                 *
+;    1.04 (5/11) Fixed error in error routine that reports "666"      *
+;         if the clock chip does not respond. This did not work       *
+;         right at power-up because the tube power was still off,     *
+;         so I added lines to turn tubes on to the error handler.     *
+;         ALSO added version number display. The version number       *
+;         will be displayed as long as switch 2 is held on the way    *
+;         into the Settings menu.                                     *
+;    1.05 (5/12) Works for either DS1307 or DS3232 clock chips.       *
+;                                                                     *
 ;**********************************************************************
 
-    list      p=16f628A           ; list directive to define processor
-    #include  "C:\Program Files\Microchip\MPASM Suite\P16F628A.INC"       ; processor specific variable definitions
+list      p=16f628A           ; list directive to define processor
+#include  "C:\Program Files\Microchip\MPASM Suite\P16F628A.INC"       ; processor specific variable definitions
 
-    errorlevel  -302              ; suppress message 302 from list file
+errorlevel  -302              ; suppress message 302 from list file
 
-    __CONFIG   _CP_OFF & _LVP_OFF & _BOREN_OFF & _MCLRE_OFF & _WDT_OFF & _PWRTE_ON & _INTOSC_OSC_NOCLKOUT 
+__CONFIG   _CP_OFF & _LVP_OFF & _BOREN_OFF & _MCLRE_OFF & _WDT_OFF & _PWRTE_ON & _INTOSC_OSC_NOCLKOUT 
 
 ; '__CONFIG' directive is used to embed configuration word within .asm file.
 ; The lables following the directive are located in the respective .inc file.
@@ -86,93 +86,93 @@
 
 ;***** VARIABLE DEFINITIONS
 wTmp        EQU        0x7E        ; variable used for context saving 
-statusTmp    EQU        0x7F        ; variable used for context saving
+statusTmp   EQU        0x7F        ; variable used for context saving
 
-ShadowA        equ        20            ; shadow register for PORTA
-ShadowB        equ        21            ; shadow register for PORTB
-Delay1        equ        22            ; for delay
-Delay2        equ        23            ; for delay
-Counter        equ        24            ; counter
+ShadowA     equ        20            ; shadow register for PORTA
+ShadowB     equ        21            ; shadow register for PORTB
+Delay1      equ        22            ; for delay
+Delay2      equ        23            ; for delay
+Counter     equ        24            ; counter
 
                                 ; NOTE! The following 26 registers must be in the order below!
-LeftDP        equ        25            ; Flags for left decimal places
-RightDP        equ        26            ; Flags for right decimal places
-T0            equ        27            ; Number for Tube 0 (rightmost). An 11(base 10) in these means no digit in that tube.
-T1            equ        28            ; etc.
-T2            equ        29            ; .
-T3            equ        2A            ; .
-T4            equ        2B            ; .
-T5            equ        2C            ; .
-T6            equ        2D            ; .
-T7            equ        2E            ; Number for Tube 7 (leftmost)
-TR0            equ        2F            ; Run length for Tube 0 (rightmost) (i.e., cycles to run until digits halt)
-TR1            equ        30            ; etc.
-TR2            equ        31            ; .
-TR3            equ        32            ; .
-TR4            equ        33            ; .
-TR5            equ        34            ; .
-TR6            equ        35            ; .
-TR7            equ        36            ; Run length for Tube 7 (leftmost)
-V0            equ        37            ; Values for tubes to stop at (using alternate animation method)
-V1            equ        38            ; .
-V2            equ        39            ; .
-V3            equ        3A            ; .
-V4            equ        3B            ; .
-V5            equ        3C            ; .
-V6            equ        3D            ; .
-V7            equ        3E            ; .
+LeftDP      equ        25            ; Flags for left decimal places
+RightDP     equ        26            ; Flags for right decimal places
+T0          equ        27            ; Number for Tube 0 (rightmost). An 11(base 10) in these means no digit in that tube.
+T1          equ        28            ; etc.
+T2          equ        29            ; .
+T3          equ        2A            ; .
+T4          equ        2B            ; .
+T5          equ        2C            ; .
+T6          equ        2D            ; .
+T7          equ        2E            ; Number for Tube 7 (leftmost)
+TR0         equ        2F            ; Run length for Tube 0 (rightmost) (i.e., cycles to run until digits halt)
+TR1         equ        30            ; etc.
+TR2         equ        31            ; .
+TR3         equ        32            ; .
+TR4         equ        33            ; .
+TR5         equ        34            ; .
+TR6         equ        35            ; .
+TR7         equ        36            ; Run length for Tube 7 (leftmost)
+V0          equ        37            ; Values for tubes to stop at (using alternate animation method)
+V1          equ        38            ; .
+V2          equ        39            ; .
+V3          equ        3A            ; .
+V4          equ        3B            ; .
+V5          equ        3C            ; .
+V6          equ        3D            ; .
+V7          equ        3E            ; .
 
 Flag        equ        3F            ; Flag register
-n            equ        40            ; Work register used by Loader
-m            equ        41            ; Work register used by Loader
-LDP            equ        42            ; Work register used by Loader
-RDP            equ        43            ; Work register used by Loader
-random        equ        44            ; random number
+n           equ        40            ; Work register used by Loader
+m           equ        41            ; Work register used by Loader
+LDP         equ        42            ; Work register used by Loader
+RDP         equ        43            ; Work register used by Loader
+random      equ        44            ; random number
 work        equ        45            ; Work register for use inside any subroutine
-bright        equ        46            ; Brightness value 0 (dimmest) to 7 (brightest) currently in use.
-incMin        equ        47            ; Register to hold Minimum while incrementing settings
-incMax        equ        48            ; Register to hold Maximum while incrementing settings
-oldMin        equ        49            ; Register to hold old minutes (so we can tell if they were changed)
-blankStart    equ        4A            ; Register to hold starting hour of tube blanking
+bright      equ        46            ; Brightness value 0 (dimmest) to 7 (brightest) currently in use.
+incMin      equ        47            ; Register to hold Minimum while incrementing settings
+incMax      equ        48            ; Register to hold Maximum while incrementing settings
+oldMin      equ        49            ; Register to hold old minutes (so we can tell if they were changed)
+blankStart  equ        4A            ; Register to hold starting hour of tube blanking
 blankEnd    equ        4B            ; Register to hold ending hour of tube blanking
-hourCount    equ        4C            ; Register to count down hours until time adjustment
-oldHour        equ        4D            ; Register to track start of hour
+hourCount   equ        4C            ; Register to count down hours until time adjustment
+oldHour     equ        4D            ; Register to track start of hour
 
-LED            equ        0            ; LED is bit 0 in PORTB
-HVE            equ        1            ; High Voltage Enable is bit 1 in PORTB
-CLK            equ        2            ; Clock line for serial-to-parallel drivers is bit 2 in PORTB
-NBL            equ        3            ; NOT Blank for serial-to-parallel drivers is bit 3 in PORTB
-DAT            equ        4            ; Data line for serial-to-parallel drivers is bit 4 in PORTB
-NLE            equ        5            ; NOT Latch Enable for serial-to-parallel drivers is bit 5 in PORTB
-SW1            equ        2            ; Switch 1 is bit 2 in PORTA
-SW2            equ        3            ; Switch 2 is bit 3 in PORTA
+LED         equ        0            ; LED is bit 0 in PORTB
+HVE         equ        1            ; High Voltage Enable is bit 1 in PORTB
+CLK         equ        2            ; Clock line for serial-to-parallel drivers is bit 2 in PORTB
+NBL         equ        3            ; NOT Blank for serial-to-parallel drivers is bit 3 in PORTB
+DAT         equ        4            ; Data line for serial-to-parallel drivers is bit 4 in PORTB
+NLE         equ        5            ; NOT Latch Enable for serial-to-parallel drivers is bit 5 in PORTB
+SW1         equ        2            ; Switch 1 is bit 2 in PORTA
+SW2         equ        3            ; Switch 2 is bit 3 in PORTA
 
-short1        equ        0            ; Short press of Button 1 was made
-long1        equ        1            ; Long press of Button 1 was made
-short2        equ        2            ; Short press of Button 2 was made (or any press...not tracking long)
-long2        equ        3            ; (reserved in case I want to track long pressed of Button 2)
+short1      equ        0            ; Short press of Button 1 was made
+long1       equ        1            ; Long press of Button 1 was made
+short2      equ        2            ; Short press of Button 2 was made (or any press...not tracking long)
+long2       equ        3            ; (reserved in case I want to track long pressed of Button 2)
 Done        equ        4            ; Flag Bit 4 used to see if world line animation is done
-Slide        equ        5            ; Flag Bit 5 used for 'slide loading' in Loader (1=slide)
-APnow        equ        6            ; Flag Bit 6 keeps track of whether current time is AM or PM (1=PM)
-Clk12        equ        7            ; Flag Bit 7 is 12/24 hour preference flag (1=12 hour clock)
+Slide       equ        5            ; Flag Bit 5 used for 'slide loading' in Loader (1=slide)
+APnow       equ        6            ; Flag Bit 6 keeps track of whether current time is AM or PM (1=PM)
+Clk12       equ        7            ; Flag Bit 7 is 12/24 hour preference flag (1=12 hour clock)
 
-negWL        equ        7            ; Bit 7 of Eflag is for negative world lines.
-toggl        equ        6            ; Bit 6 of Eflag is for toggling
+negWL       equ        7            ; Bit 7 of Eflag is for negative world lines.
+toggl       equ        6            ; Bit 6 of Eflag is for toggling
 beta        equ        5            ; Bit 5 of Eflag is for beta world line
 
-deBounceDly    equ        d'30'        ; Set the constant for the deBounce delay time
+deBounceDly equ        d'30'        ; Set the constant for the deBounce delay time
 
 ; Variables for I2C routines need to be accessable in Bank1, so I'll start them at 70h (where there are registers availble to both Banks 0 and 1).
 GenCount    equ        70            ; General-purpose counter/scratch register
-Mem_Loc        equ        71            ; Memory address within DS1307 chip to access
+Mem_Loc     equ        71            ; Memory address within DS1307 chip to access
 Data_Buf    equ        72            ; Byte read from DS1307 gets stored here
 Out_Byte    equ        73            ; Used to hold byte to be written to DS1307
-Eflag        equ        74            ; Flag bit register
+Eflag       equ        74            ; Flag bit register
 
-brightSet    equ        75            ; Clock Brightness preference by user (also here so it can be loaded from EEPROM 7Eh while we are in Bank 1)
-dateDMY        equ        76            ; Date setting peference by user 1= prefers DD MM YY  0= prefers MM DD YY  (read from in EEPROM 7Dh)
-pointer        equ        77            ; Pointer to track EEPROM address (accessible from both Banks)
-timeAdj        equ        78            ; Time adjustment register (number of hours between time adjustments)
+brightSet   equ        75            ; Clock Brightness preference by user (also here so it can be loaded from EEPROM 7Eh while we are in Bank 1)
+dateDMY     equ        76            ; Date setting peference by user 1= prefers DD MM YY  0= prefers MM DD YY  (read from in EEPROM 7Dh)
+pointer     equ        77            ; Pointer to track EEPROM address (accessible from both Banks)
+timeAdj     equ        78            ; Time adjustment register (number of hours between time adjustments)
 timeFast    equ        79            ; Time adjustment for Fast or Slow clock (1=fast   0=slow)
 
 ; Define port pins for I2C access of DS1307: SCL clock line is RA0. SDA data line is RA1.
@@ -185,30 +185,30 @@ timeFast    equ        79            ; Time adjustment for Fast or Slow clock (1
 ; Where the assembler sees the symbols defined below, they are the same as the "TRISA,n" stuff 
 ; (or as "PORTA,n" in Bank0).
 
-#define        SCL        TRISA,0
-#define        SDA        TRISA,1
+#define     SCL        TRISA,0
+#define     SDA        TRISA,1
 
 ;**********************************************************************
-            ORG     0x000        ; processor reset vector
-            goto    Main        ; go to beginning of program
+            ORG        0x000        ; processor reset vector
+            goto       Main        ; go to beginning of program
     
 ;======================
 ;Interrupt routines
-            ORG     0x004        ; interrupt vector location
-            movwf   wTmp        ; save off current W register contents
-            movf    STATUS,w    ; move status register into W register
-            movwf    statusTmp    ; save off contents of STATUS register
+            ORG        0x004        ; interrupt vector location
+            movwf      wTmp        ; save off current W register contents
+            movf       STATUS,w    ; move status register into W register
+            movwf      statusTmp    ; save off contents of STATUS register
 ; isr code can go here or be located as a call subroutine elsewhere
-            movf    statusTmp,w    ; retrieve copy of STATUS register
-            movwf    STATUS      ; restore pre-isr STATUS register contents
-            swapf   wTmp,f
-            swapf   wTmp,w        ; restore pre-isr W register contents
+            movf       statusTmp,w    ; retrieve copy of STATUS register
+            movwf      STATUS      ; restore pre-isr STATUS register contents
+            swapf      wTmp,f
+            swapf      wTmp,w        ; restore pre-isr W register contents
             retfie              ; return from interrupt
 
 ;======================
 ;Subroutines
 
-RunLength    addwf    PCL,f        ; Lookup Table for run lengths (appropriate random number in W... 0-7, 0-15, 0-63)
+RunLength   addwf    PCL,f        ; Lookup Table for run lengths (appropriate random number in W... 0-7, 0-15, 0-63)
             retlw    d'20'        ; The first 8 are multiples of 10, for use when tube 7 returns to starting digit.
             retlw    d'30'        ; The first 16 are multiples of 5, for use when two cycles return digits to same.
             retlw    d'40'        ; The rest of the 64 are spaced to give good stopping distribution.
@@ -285,7 +285,7 @@ deBounce                        ; Debounce delay with brightness control
             bcf        ShadowB,NBL    ;   So if Y<w, Clear bit for tubes Blanked
             movfw    ShadowB        ; Move tube blanking result to PORTB
             movwf    PORTB        ;
-deBounce1    decfsz    Delay1,f    ; Runs through 256 loopings of Delay1
+deBounce1   decfsz    Delay1,f    ; Runs through 256 loopings of Delay1
             goto    deBounce1    ; 
             decfsz    Delay2,f    ; Decrements Delay2
             goto    deBounce    ; If Delay2 not over, wait more.
@@ -295,8 +295,8 @@ deBounce1    decfsz    Delay1,f    ; Runs through 256 loopings of Delay1
     
 ;-------
 
-delay        movwf    Counter        ; Delay with brightness control. Time in W when called.
-delay1        bsf        ShadowB,NBL    ; Set bit for tubes NOT Blanked
+delay       movwf    Counter        ; Delay with brightness control. Time in W when called.
+delay1      bsf        ShadowB,NBL    ; Set bit for tubes NOT Blanked
             movfw    Counter        ; Get current Counter value
             andlw    b'00000111'    ; Keep only 3 rightmost digits (0 to 7)
             subwf    bright,w    ; See if result is greater than brightness number
@@ -304,7 +304,7 @@ delay1        bsf        ShadowB,NBL    ; Set bit for tubes NOT Blanked
             bcf        ShadowB,NBL    ;   So if Y<w, Clear bit for tubes Blanked
             movfw    ShadowB        ; Move tube blanking result to PORTB
             movwf    PORTB        ;
-delay2        decfsz    Delay1,f    ; Inner loop...
+delay2      decfsz    Delay1,f    ; Inner loop...
             goto    delay2        ;   runs through 256 loopings decrementing Delay1
             decfsz    Counter,f    ; Decrement Counter.
             goto    delay1        ;   and do more loops until Counter is zero
@@ -313,7 +313,7 @@ delay2        decfsz    Delay1,f    ; Inner loop...
 ;-------
 
 delay100    movwf    Counter        ; Delay 100% brightness. Time in W when called.
-delay3        decfsz    Delay1,f    ; Inner loop...
+delay3      decfsz    Delay1,f    ; Inner loop...
             goto    delay3        ;   runs through 256 loopings decrementing Delay1
             decfsz    Counter,f    ; Decrement Counter.
             goto    delay3        ;   and do more loops until Counter is zero
@@ -321,12 +321,12 @@ delay3        decfsz    Delay1,f    ; Inner loop...
 
 ;-------
 
-FillBlanks    movlw    d'8'        ; Going to blank 8 tubes
+FillBlanks  movlw    d'8'        ; Going to blank 8 tubes
             movwf    Counter        ;   with this counter
             movlw    T0            ; ADDRESS of T0
             movwf    FSR            ;   for indirect addressing
             movlw    d'10'        ; 10 will display blank in tube
-nextBlank    movwf    INDF        ; Put it in a tube register
+nextBlank   movwf    INDF        ; Put it in a tube register
             incf    FSR,f            ; Increment for next tube
             decfsz    Counter,f    ; See if I'm done
             goto    nextBlank    ;   Not yet
@@ -338,8 +338,8 @@ nextBlank    movwf    INDF        ; Put it in a tube register
 ; the ones digit in T1.
 ; Call with memory location value in W, *or* call GetT1T0b if location is already in Mem_Loc
 
-GetT1T0        movwf    Mem_Loc        
-GetT1T0b    call    ReadDS1307    ; Get the contents from the clock register with location already in Mem_Loc
+GetT1T0     movwf    Mem_Loc        
+GetT1T0b    call     ReadDS1307    ; Get the contents from the clock register with location already in Mem_Loc
 FillT1T0    movfw    Data_Buf    ; (for calls that jump in here, bring Data_Buf into W)
             andlw    b'00001111'    ;
             movwf    T0            ; Put ones digit into T0
@@ -350,7 +350,7 @@ FillT1T0    movfw    Data_Buf    ; (for calls that jump in here, bring Data_Buf 
 
 ;-------
 
-Buttons        movlw    b'11110000'    ; Clear the Button flag return bits (bits 0-3)
+Buttons     movlw    b'11110000'    ; Clear the Button flag return bits (bits 0-3)
             andwf    Flag,f        ;
             call    deBounce    ; Call deBounce to give the tubes some properly dimmed display time
             btfsc    PORTA,SW1    ; Button 1 pressed?
@@ -358,23 +358,23 @@ Buttons        movlw    b'11110000'    ; Clear the Button flag return bits (bits
             btfsc    PORTA,SW2    ; Button 2 pressed?
             goto    any2press    ;    ...yes, go handle button 2 press
             goto    Buttons        ; Neither button pressed. Wait more.
-length        movlw    d'40'        ; This many deBounce times is a long push
+length      movlw    d'40'        ; This many deBounce times is a long push
             movwf    Counter        ;   (With deBounce Delay2=30 and Counter=40, about 1 second)
-watch        btfss    PORTA,SW1    ; Button 1 released?
+watch       btfss    PORTA,SW1    ; Button 1 released?
             goto    short1press    ;    ...yes. Go handle short push of Button 1.
             call    deBounce    ; Wait some (tubes get displayed with dimming during deBounce)
             decfsz    Counter,f    ; Done counting?
             goto    watch        ;   ...still counting. Go wait more.
                                 ; Fallen out of long delay...
-long1press    btfsc    PORTA,SW1    ; Handle long press of button 1
+long1press  btfsc    PORTA,SW1    ; Handle long press of button 1
             goto    long1press    ;    ...after first waiting for release.
             call    deBounce    ; deBounce after relase.                        
             bsf        Flag,long1    ; Flag long press of Button 1
             return
-short1press    call    deBounce    ; 
+short1press call    deBounce    ; 
             bsf        Flag,short1    ;
             return
-any2press    btfsc    PORTA,SW2    ; Handle press of button 2
+any2press   btfsc    PORTA,SW2    ; Handle press of button 2
             goto    any2press    ;    ...after first waiting for release.
             call    deBounce    ; deBounce after relase.    
             bsf        Flag,short2    ;
@@ -382,7 +382,7 @@ any2press    btfsc    PORTA,SW2    ; Handle press of button 2
 
 ;--------
 
-Increment    call    deBounce    ; This routine increment/decrements settings values
+Increment   call    deBounce    ; This routine increment/decrements settings values
             call    Buttons
             btfsc    Flag,short2    ; If Button 2 press, done adjusting
             return  
@@ -393,7 +393,7 @@ decValue    movfw    incMin        ;    ...otherwise, decrement value. First we 
             btfsc    STATUS,Z    ; 
             goto    setToMax    ; If Z=1, they were the same, so go set Data_Buf to incMax.
                                 ; If Z=0, decrement the packed BCD. 
-decBCD        movlw     b'00001111'    ; First check to see if the right digit is 0000...
+decBCD      movlw     b'00001111'    ; First check to see if the right digit is 0000...
             andwf    Data_Buf,w    ;   ...by grabbing the right digit into W
             btfss    STATUS,Z    ; If the result in W was Zero, the Z bit will be set
             goto    decNow        ;   ...If Z=0, go decrement directly
@@ -402,7 +402,7 @@ decBCD        movlw     b'00001111'    ; First check to see if the right digit i
             movlw    b'00010000'    ;        And then...
             subwf    Data_Buf,f    ;        ...here is the subtracting 1 from the left digit (borrow).
             goto    valueOK
-decNow        decf    Data_Buf,f    ; If the right digit is not zero, we can just decrement the packed BCD directly.
+decNow      decf    Data_Buf,f    ; If the right digit is not zero, we can just decrement the packed BCD directly.
             goto    valueOK        ;    and be done.
 setToMax    movfw    incMax        ; Take the packed BCD pattern of incMax...
             movwf    Data_Buf    ; ...and put it into Data_Buf.
@@ -411,7 +411,7 @@ incValue    movfw    incMax        ; Move incMac (packed BCD) into W for compare
             subwf    Data_Buf,w    ; If Data_Buf is >= max, result will Carry flag will be set
             btfsc    STATUS,C    ;   If C clear, go increment.
             goto    setToMin    ;   If C set, go put incMin in.
-incBCD        incf    Data_Buf,f    ; Increment the packed BCD. This might cause right digit to go to hex A...
+incBCD      incf    Data_Buf,f    ; Increment the packed BCD. This might cause right digit to go to hex A...
             movlw    b'00001111'    ;    so let's get that digit...
             andwf    Data_Buf,w    ;    by doing this...
             sublw    b'00001010'    ;    so we can compare to hex A
@@ -425,7 +425,7 @@ incBCD        incf    Data_Buf,f    ; Increment the packed BCD. This might cause
 setToMin    movfw    incMin        ; Take the packed BCD pattern of incMin...
             movwf    Data_Buf    ; ...and put it into Data_Buf.
             goto    valueOK        ;    
-valueOK        call    FillT1T0    ; Fill new value into tubes
+valueOK     call    FillT1T0    ; Fill new value into tubes
             call     Loader        ;
             goto    Increment    ;
 
@@ -433,7 +433,7 @@ valueOK        call    FillT1T0    ; Fill new value into tubes
 ;--------
 
                                 ; Routine to send a 1 to the serial-to-parallel drivers.
-send1        bsf        ShadowB,DAT    ; Set Data line high for one
+send1       bsf        ShadowB,DAT    ; Set Data line high for one
             bsf        ShadowB,CLK    ; Set clock high
             movfw    ShadowB        ; Copy ShadowB...
             movwf    PORTB        ; ...to PORTB
@@ -443,7 +443,7 @@ send1        bsf        ShadowB,DAT    ; Set Data line high for one
             return
 ;-------
                                 ; Routine to send a 0 to the serial-to-parallel drivers.
-send0        bcf        ShadowB,DAT    ; Set Data line high for one
+send0       bcf        ShadowB,DAT    ; Set Data line high for one
             bsf        ShadowB,CLK    ; Set clock high
             movfw    ShadowB        ; Copy ShadowB...
             movwf    PORTB        ; ...to PORTB
@@ -453,7 +453,7 @@ send0        bcf        ShadowB,DAT    ; Set Data line high for one
             return
 ;-------
 
-RandomNum    movlw    d'63'        ; Pseudo-random number generator
+RandomNum   movlw    d'63'        ; Pseudo-random number generator
             addwf    random,w    ; newRandom = 3 x oldRandom + 63
             addwf    random,w    ;
             addwf    random,f    ;
@@ -466,7 +466,7 @@ RandomNum    movlw    d'63'        ; Pseudo-random number generator
 ; Call with: DS1307 register address in Mem_Loc
 ; Returns with: byte in Data_Buf
 
-ReadDS1307    bcf        STATUS,RP0    ; Bank0
+ReadDS1307  bcf        STATUS,RP0    ; Bank0
             movfw    ShadowA        ; Clear bits RA0 and RA1 in shadowA and PORTA...
             andlw    b'11111100'    ;   ...for passive control of the I2C lines (if one of those pins gets
             movwf    ShadowA        ;   ...set as output, these zeros will make the line low, and if the
@@ -509,7 +509,7 @@ ReadDS1307    bcf        STATUS,RP0    ; Bank0
 ; Call with: a DS1307 resister address in Mem_Loc, byte to be sent in Data_Buf
 ; Returns with:  nothing returned
 
-WriteDS1307    bcf        STATUS,RP0    ; Bank0
+WriteDS1307 bcf        STATUS,RP0    ; Bank0
             movfw    ShadowA        ; Clear bits RA0 and RA1 in shadowA and PORTA
             andlw    b'11111100'    ;   ...for passive control of the I2C lines (if one of those pins gets
             movwf    ShadowA        ;   ...set as output, these zeros will make the line low, and if the
@@ -542,10 +542,10 @@ WriteDS1307    bcf        STATUS,RP0    ; Bank0
 
 ; This routine reads one byte of data from the DS307 real-time Clock chip into Data_Buf
 
-Byte_In        clrf    Data_Buf    ;
+Byte_In     clrf    Data_Buf    ;
             movlw    0x08        ; 8 bits to receive
             movwf    GenCount    ;
-ControlIn    rlf        Data_Buf,f    ; Shift bits into buffer
+ControlIn   rlf        Data_Buf,f    ; Shift bits into buffer
             bcf        SCL            ; Pull clock line low
             nop                    ;
             bsf        SCL            ; Clock line gets pulled high to read bit
@@ -566,14 +566,14 @@ Byte_Out    movwf    Out_Byte    ; Byte to send was in W...now also in Out_Byte
             movlw    0x08        ; 8 bits to send
             movwf    GenCount    ;
             rrf        Out_Byte,f    ; shift right in preparation for next loop
-ControlOut    rlf        Out_Byte,f    ; shift bits out of buffer
+ControlOut  rlf        Out_Byte,f    ; shift bits out of buffer
             bcf        SCL            ; pull clock line low
             nop                    ;
             btfsc    Out_Byte,7    ; send current "bit 7"
             goto    BitHigh        ;
             bcf        SDA            ;
             goto    ClockOut    ;
-BitHigh        bsf        SDA            ;
+BitHigh     bsf        SDA            ;
 ClockOut    bsf        SCL            ; pull clock high after sending bit
             decfsz    GenCount,f    ;
             goto    ControlOut    ;
@@ -584,7 +584,7 @@ ClockOut    bsf        SCL            ; pull clock high after sending bit
             nop                    
             bsf        SCL            ; pull clock high for ACK read
             clrf    GenCount    ; reuse this register as a timeout counter (to 256us) to test for ACK
-WaitForACK    bsf        STATUS,RP0    ; select Bank1 for GenCount access (Don't think I need this [could nop], but I'll leave it.)
+WaitForACK  bsf        STATUS,RP0    ; select Bank1 for GenCount access (Don't think I need this [could nop], but I'll leave it.)
             incf    GenCount,f    ; increase timeout counter each time ACK is not received
             btfsc    STATUS,Z    ; Z will be clear until we increment GenCount all the way up to zero (after 256 times)
             goto    No_ACK_Rec    ;
@@ -599,7 +599,7 @@ WaitForACK    bsf        STATUS,RP0    ; select Bank1 for GenCount access (Don't
 
 ; No ACK received from DS1307 (must use "return" from here)
 ; Set a flag bit to indicate failed write and check for it upon return.
-No_ACK_Rec    bsf        Eflag,0        ; set flag bit
+No_ACK_Rec  bsf        Eflag,0        ; set flag bit
             return                ; returns to Byte_Out routine (Bank 1 selected)
 
 ;-------
@@ -625,7 +625,7 @@ Crash666    goto    Crash666    ; Infinite loop crash.
 
 ;------
 
-Fun            clrf    T7            ; Zero out the leftmost tube for most random world lines
+Fun         clrf    T7            ; Zero out the leftmost tube for most random world lines
             bcf        Eflag,beta    ; Clear the beta world line flag.
             bcf        Eflag,negWL    ; Clear negative world line flag.
             movfw    TMR0        ; Seed 0-255 randomly by switch release that got us here
@@ -648,9 +648,9 @@ Fun            clrf    T7            ; Zero out the leftmost tube for most rando
             btfsc    Eflag,beta    ; But if we got a beta world line...
             incf    TR7,f        ;   increment the run length so it will stop at one.
             clrf    TR6            ; Decimal point tube does no incrementing.
-FillRunLens    movlw    TR5            ; ADDRESS of TR5
+FillRunLens movlw    TR5            ; ADDRESS of TR5
             movwf    FSR            ;    for indirect addressing.
-nextRL        call    RandomNum    ; Gets 0-255 in W
+nextRL      call    RandomNum    ; Gets 0-255 in W
             andlw    b'00111111'    ; 0-63 in W
             call     RunLength    ; Gets tube's run length
             movwf    INDF        ;    and puts it in TRn
@@ -665,7 +665,7 @@ nextRL        call    RandomNum    ; Gets 0-255 in W
 
 ;-------
 
-animate        bcf        Flag,Done    ; Clear bit Done of Flag for tracking if animation is done.
+animate     bcf        Flag,Done    ; Clear bit Done of Flag for tracking if animation is done.
             movfw    TR7            ; Load TR7 runlength into W
             btfsc    STATUS,Z    ;   and see if it's zero.
             goto    chkNeg        ;   If zero, skip to tubes 5 thru 0 (7 has already stopped)
@@ -677,7 +677,7 @@ animate        bcf        Flag,Done    ; Clear bit Done of Flag for tracking if 
             btfsc    STATUS,C    ;   If new T7 < 10, C=0
             clrf    T7            ;     so clear T7 to zero if it reached 10.
             goto    IncTubes    ; On to tubes 5-0
-chkNeg        movlw    d'10'        ; Before we go one to tubes 5-0, check to see if this is a negative world line...
+chkNeg      movlw    d'10'        ; Before we go one to tubes 5-0, check to see if this is a negative world line...
             btfsc    Eflag,negWL    ;  
             movwf    T7            ;    ...If it is, we blank tube 7. 
 IncTubes    movlw    TR5            ; ADDRESS of TR5
@@ -696,7 +696,7 @@ nextTube    movfw    INDF        ; Put TRn runlength into W
             clrf    INDF        ;     so clear Tn to zero if it reached 10.        
             movlw    d'8'        ; Add 8 back into FSR to
             addwf    FSR,f        ;    put it back to TRn
-notthis        decf    FSR,f        ; Decrement to do next tube
+notthis     decf    FSR,f        ; Decrement to do next tube
             movlw    T7            ; ADDRESS of T7 register (below the TRn registers)
             subwf    FSR,w        ; Does FSR minus T7's address
             btfss    STATUS,Z    ; If we have done all the tubes, Zero flag will be clear.
@@ -709,12 +709,12 @@ notthis        decf    FSR,f        ; Decrement to do next tube
             movlw    d'30'        ; Delay to see the number
             call    delay        ; 
             goto    animate        ; And go to the next animation step.
-alldone        call    Pulse        ; Animation done. Do flash at end of animation
+alldone     call    Pulse        ; Animation done. Do flash at end of animation
             return                ;
 
 ;------
 
-Pulse        movlw    d'7'        ; Flash full brightness
+Pulse       movlw    d'7'        ; Flash full brightness
             movwf    bright        ;
             movlw    d'200'        ; Flash at end of animation
             call    delay        ; 
@@ -757,9 +757,9 @@ nextRLen    call    RandomNum    ; Gets 0-255 in W
 ;------
                                 ; animate2 is different from animate in that when it stops it will be displaying V7-V0 values.
 animate2    bcf        Flag,Done    ; Clear bit Done of Flag, for tracking if animation is done.
-IncTubes2    movlw    TR7            ; ADDRESS of TR7
+IncTubes2   movlw    TR7            ; ADDRESS of TR7
             movwf    FSR            ;   for indirect addressing
-nextTube2    movfw    INDF        ; Bring TRn runlength into W
+nextTube2   movfw    INDF        ; Bring TRn runlength into W
             btfsc    STATUS,Z    ;    and see if it's zero.
             goto    notthis2    ;    If zero, this tube's run length has run out (done animating it), and go to next one.
             decf    INDF,f        ;    If not zero, do this tube. Decrement runlength.
@@ -777,7 +777,7 @@ nextTube2    movfw    INDF        ; Bring TRn runlength into W
             movlw    d'8'        ; Then let's bring FSR back to the TRn registers, but one register lower than before
             addwf    FSR,f        ;    so we can do the next tube.
             goto    notthis2    ;
-keepon        bsf        Flag,Done    ; Set bit so we know we haven't finished aniation.
+keepon      bsf        Flag,Done    ; Set bit so we know we haven't finished aniation.
             movlw    d'8'        ; Subtract 8 from FSR so it points
             subwf    FSR,f        ;   to Tn instead of TRn
             incf    INDF,f        ; Increment Tn
@@ -807,7 +807,7 @@ alldone2    call    Loader        ; Final load
 ;------
 
                                 ; Routin copies T0-T7 into V0-V7
-moveNumber    movlw    T0            ; ADDRESS of T0
+moveNumber  movlw    T0            ; ADDRESS of T0
             movwf    FSR            ;    for indirect addressing.
 nextMove    movfw    INDF        ; Get Tn
             movwf    work        ; put it in work
@@ -826,7 +826,7 @@ nextMove    movfw    INDF        ; Get Tn
 
 ;------
 
-Loader        movfw    LeftDP        ; Routine to load a number into all 8 tubes. Values are in T0-T7, LeftDP, and RightDP.
+Loader      movfw    LeftDP        ; Routine to load a number into all 8 tubes. Values are in T0-T7, LeftDP, and RightDP.
             movwf    LDP            ; Make copies of LeftDP and RightDP so contents are not destroyed.
             movfw    RightDP        ; 
             movwf    RDP            ;
@@ -837,7 +837,7 @@ loopLoad    rlf        LDP,f        ; Rotate a dp flag into the Carry bit
             goto    dpset        ;   ...yes, jump to dpset.
             call    send0        ;   ...no, so send 0 to the shift registers.
             goto    digi        ;      and then jump to continue with the digit.
-dpset        call    send1        ; dp flag was set, so send 1 to shift registers
+dpset       call    send1        ; dp flag was set, so send 1 to shift registers
 digi        movlw    d'9'        ; Put 9 into m. This will decrement as we go through loopdigi.
             movwf    m
             clrf    n            ; Start with n=0. This will increment as we go through loopdigi.
@@ -848,26 +848,26 @@ loopdigi    incf    n,f            ; Increment n (n is the number we compare aga
             goto    yesdigi        ;   ...goto yesdigi
             call     send0        ;   ...otherwise send a 0 to the shift registers.
             goto    nextshift    ;      and check the next bit to shift
-yesdigi        call    send1        ; Digit=n, so send a 1 to the shift registers.
-nextshift    decfsz    m,f            ; Decrement m and see if we are done.
+yesdigi     call    send1        ; Digit=n, so send a 1 to the shift registers.
+nextshift   decfsz    m,f            ; Decrement m and see if we are done.
             goto    loopdigi    ;   ...if not done go back to loopdigi
             movfw    INDF        ; When we get here we still need to see if the digit is a zero
             btfsc    STATUS,Z    ; If that digit=0 (Zero flag will be set from moving it into W), then...
             goto    yeszero        ;   ...goto yeszero
             call     send0        ;   ...otherwise send a 0 to the shift registers.
             goto    checkRDP    ;      and check the next bit to shift
-yeszero        call    send1        ; Digit=n, so send a 1 to the shift registers.
+yeszero     call    send1        ; Digit=n, so send a 1 to the shift registers.
 checkRDP    rlf        RDP,f        ; Digit is done, so check for right decimal point
             btfsc    STATUS,C    ; Is the dp flag set?
             goto    dpset2        ;   ...yes, jump.
             call    send0        ;   ...no, so send 0 to the shift registers.
             goto    tubeDone    ;      and then jump to continue        
-dpset2        call    send1        ; dp flag was set, so send 1 to shift registers
+dpset2      call    send1        ; dp flag was set, so send 1 to shift registers
 tubeDone    decf    FSR,f        ; Decrement File Select Register to do next tube.
 
             btfss    Flag,Slide    ; "Slide Loading" flag
             goto    noSlide        ;    If Flag,Slide is clear, normal load (skip this next stuff)
-LatchSlide    bsf        ShadowB,NLE    ; Latch the result sf current tubes:
+LatchSlide  bsf        ShadowB,NLE    ; Latch the result sf current tubes:
             movfw    ShadowB        ; Copy ShadowB...
             movwf    PORTB        ; ...to PORTB (Latches load when NLE is high)
             bcf        ShadowB,NLE    ; Get ready to lock the latches.
@@ -877,11 +877,11 @@ LatchSlide    bsf        ShadowB,NLE    ; Latch the result sf current tubes:
             movlw    d'80'        ; Pause for display
             call     delay
 
-noSlide        movlw    RightDP        ; Put the *ADDRESS* of the RightDP register into W ("RightDP" is equated to that address)
+noSlide     movlw    RightDP        ; Put the *ADDRESS* of the RightDP register into W ("RightDP" is equated to that address)
             subwf    FSR,w        ; ...and subtract it from FSR to see if we did all the tubes.
             btfss    STATUS,Z    ;    If we haven't done all the tubes, Zero flag will be clear
             goto    loopLoad    ;    so go back and do the next tube.
-Latch        bsf        ShadowB,NLE    ; Latch the result:
+Latch       bsf        ShadowB,NLE    ; Latch the result:
             movfw    ShadowB        ; Copy ShadowB...
             movwf    PORTB        ; ...to PORTB (Latches load when NLE is high)
             bcf        ShadowB,NLE    ; Get ready to lock the latches.
@@ -955,7 +955,7 @@ Init        clrf    PORTA        ; Clear Port A
             movfw    EEDATA        ; W = EEDATA (W will now have the 12/24 setting, either 00000001 for 12-hour, or 00000000 for 24-hour)
             bcf        STATUS,RP0    ; Back to Bank 0
             clrf    Flag        ; Clear the Flag register
-;            btfsc    W,0            ; Clock preference setting from EEPROM is in W from before  <-- ERROR HERE. Can't test bits in W like this!
+;           btfsc    W,0            ; Clock preference setting from EEPROM is in W from before  <-- ERROR HERE. Can't test bits in W like this!
             movwf    work        ; Move W to register "work"...
             btfsc    work,0        ;   ...and do the test there.
             bsf        Flag,Clk12    ; Set the 12/24 flag based upon it. (1 = 12 hour)
@@ -1005,7 +1005,7 @@ Init        clrf    PORTA        ; Clear Port A
             goto    ClockON        ; If the bit was 1, this can't be a DS3232, so must be a running DS1307. Leap!
             clrf    Data_Buf    ; If we get here, we have a stopped DS3232, so clear 0Fh and do clock setup
             call    WriteDS1307    ; Clear the 0Fh register starts the DS3232 Clock.
-Start1307    clrf    Mem_Loc        ; Going to clear Seconds register (00h)
+Start1307   clrf    Mem_Loc        ; Going to clear Seconds register (00h)
             clrf    Data_Buf    ;
             call    WriteDS1307    ; Clearing the seconds register starts a halted DS1307 (and doesn't hurt a DS3232 startup)
             incf    Mem_Loc,f    ; Fill the clock with July 7, 2010, 12:30 PM (when first D-mail was sent) just for giggles (otherwise it would be 01/01/00 00:00:00)
@@ -1035,7 +1035,7 @@ Start1307    clrf    Mem_Loc        ; Going to clear Seconds register (00h)
             call    WriteDS1307    ; Write a zero there
             incf    Mem_Loc,f    ; Address of RAM where blankEnd is stored is 0x15
             call    WriteDS1307    ; Write a zero there.
-ClockON        movlw    0x02        ; Hours register in clock RAM
+ClockON     movlw    0x02        ; Hours register in clock RAM
             movwf    Mem_Loc        ; Put it into Mem_Loc
             call    ReadDS1307    ; Read the hours from DS1307 (result is in W and Data_Buf)
             movwf    oldHour        ;   and store it in oldHour (to track hour changes)    
@@ -1059,7 +1059,7 @@ ClockON        movlw    0x02        ; Hours register in clock RAM
             goto    GetTime        ; Start in clock mode.
 
 
-PreLoad        movlw    d'1'        ; Load up Steins Gate worldline number
+PreLoad     movlw    d'1'        ; Load up Steins Gate worldline number
             movwf    T7
             movlw    d'10'
             movwf    T6
@@ -1102,7 +1102,7 @@ funtime        call    Fun            ; Roll a random world line number with ani
 
 
 
-WorldLines    clrf    pointer        ; Display world lines from anime and visual novel:
+WorldLines  clrf    pointer        ; Display world lines from anime and visual novel:
             movlw    d'0'        ; Start with the W.L. number we first see in the anime,
             movwf    T7            ; then get to the next ones using tube runtimes that     
             movlw    d'10'        ; are stored in EEPROM staring at 0x00
@@ -1121,19 +1121,19 @@ WorldLines    clrf    pointer        ; Display world lines from anime and visual
             movwf    T0
             call     Loader        ; Display the above numbers into the tubes.
                                 ; We will get subsequent run lengths from EEPROM to reach next world lines
-loiter        call    Buttons        ; Call routine that watches the buttons
+loiter      call    Buttons        ; Call routine that watches the buttons
             btfsc    Flag,short1    ; If there was a short press of Button 1...
             goto    WLnext        ;    ...go to the next world line
             btfsc    Flag,long1    ; If there was a long press of Button 1...
             goto    GetTime        ;   ...go to Clock display
             goto    OwnTime        ; We get here is 2 was pressed. Go to Enter Your Own Number
 
-WLnext        movlw    d'8'        ; Going to get 8 tube runtimes from EEPROM
+WLnext      movlw    d'8'        ; Going to get 8 tube runtimes from EEPROM
             movwf    GenCount    ; Use the general counter from the Clock I/O routines (it's free)
             movlw    TR7            ; ADDRESS of tube 7 runtime register
             movwf    FSR            ;    for indirect addressing.
 
-moreTRn        bsf        STATUS,RP0    ; Bank 1
+moreTRn     bsf        STATUS,RP0    ; Bank 1
             movfw    pointer        ; Address to read...
             movwf    EEADR         ; ...gets put here.
             bsf        EECON1,RD    ; EE Read
@@ -1157,7 +1157,7 @@ moreTRn        bsf        STATUS,RP0    ; Bank 1
 
 
 
-OwnTime        call    FillBlanks    ; Routine to let you enter any number manually. Start with blanks.
+OwnTime     call    FillBlanks    ; Routine to let you enter any number manually. Start with blanks.
             movlw    T7            ; ADDRESS of T7
             movwf    pointer        ; pointer will track the tube address
 nextDigi    movfw    pointer        ; Use pointer
@@ -1183,7 +1183,7 @@ more        call    Loader        ; Display the number
             decf    pointer,f    ; Skips tube 6
             goto    nextDigi    ;
             call     Loader        ;
-doneDigits    movlw    d'8'        ; Going to blink 4 times (4 off, 4 on ...so 8 here)
+doneDigits  movlw    d'8'        ; Going to blink 4 times (4 off, 4 on ...so 8 here)
             movwf    GenCount    ;   using this counter
 blinkies    movlw    b'00001000'    ;
             xorwf    ShadowB,f    ;
@@ -1197,31 +1197,31 @@ blinkie2    call    delay100    ;
             decfsz    GenCount,f    ;
             goto    blinkies    ;
             call    moveNumber    ; Copy the user's number from T0-T7 to V0-V7
-waitin        call    Buttons        ; Wait for any button
+waitin      call    Buttons        ; Wait for any button
             btfsc    Flag,short1    ; See if button 1 was pressed...
             goto    spinOwn        ;    and if it was, spin the user's world line number.
             goto    GetTime        ;    Otherwise, Finished with world line playing. Go Clock mode.
-spinOwn        movlw    b'01000000'    ; Toggle the flag
+spinOwn     movlw    b'01000000'    ; Toggle the flag
             xorwf    Eflag,f        ;
             btfss    Eflag,toggl ;
             goto    myWorld        ;
             call    Fun            ; Animate random world line
             goto    waitin        ;
-myWorld        call    Fun2        ; Animate that ends in number in V0-V7
+myWorld     call    Fun2        ; Animate that ends in number in V0-V7
             goto    waitin        ;
 
-incDigi        incf    INDF,f        ;
+incDigi     incf    INDF,f        ;
             movlw    d'11'        ; See if we have overrun to 11 (10 is allowed for blank tube)
             subwf    INDF,w        ; This subtraction will set Zero flag if we go to 11
             btfsc    STATUS,Z    ;
             clrf    INDF        ; ...and if we do, we clear the digit
             goto    more        ; And we go for more inc/dec
-decDigi        movfw    INDF        ; Load the tube value so we can check for zero
+decDigi     movfw    INDF        ; Load the tube value so we can check for zero
             btfsc    STATUS,Z    ; 
             goto    zipDigi        ; Digit is zero, go set it to 10
             decf    INDF,f        ; Decrement and go for more inc/dec
             goto    more        ;
-zipDigi        movlw    d'10'        ; Tube was 0, so set to 10 (blank)
+zipDigi     movlw    d'10'        ; Tube was 0, so set to 10 (blank)
             movwf    INDF        
             goto    more        ; go for more inc/dec
 
@@ -1230,14 +1230,14 @@ zipDigi        movlw    d'10'        ; Tube was 0, so set to 10 (blank)
 GetTime                            ; Time Display from DS1307 Clock Chip.
             movfw    brightSet    ; set brightness from brightSet value for clock display
             movwf    bright        ;
-wait123        btfsc    PORTA,SW2    ; Wait for SW2 release
+wait123     btfsc    PORTA,SW2    ; Wait for SW2 release
             goto    wait123        ;
             call    deBounce    ;
             movlw    d'10'        ; Make Tubes 2 and 5 display no digit
             movwf    T2
             movwf    T5
 
-ReadSec        bcf        Flag,Slide
+ReadSec     bcf        Flag,Slide
             call    deBounce    ; A little tube display time here (with dimming).
             clrf    Mem_Loc        ; Memory location of the seconds register of the DS1307 is 00h
             call    ReadDS1307    ; Now let's read the seconds register from DS1307 (Mem_Loc still zero)
@@ -1261,15 +1261,15 @@ pressed1    btfss    ShadowB,HVE    ; Are tubes blanked by High Voltage turned o
 pressed2    btfss    ShadowB,HVE    ; Are tubes blanked by High Voltage turned off?
             goto    unblankem    ;   yes, go unblank them. Otherwise...
             goto    GetDate        ; Go display date
-unblankem    bsf        ShadowB,HVE    ; Set High Voltage Enable ON to display the tubes now.
+unblankem   bsf        ShadowB,HVE    ; Set High Voltage Enable ON to display the tubes now.
             movfw    ShadowB        ; Copy ShadowB...
             movwf    PORTB        ; ...to PORTB 
-wait456        btfsc    PORTA,SW1    ; Wait for SW1 release
+wait456     btfsc    PORTA,SW1    ; Wait for SW1 release
             goto    wait456        ;
             goto    GetTime        ; (it will wait for SW2 release, and will deBounce)
 
 NewSec
-;            call    deBounce    ; First a little displaying time here.
+;           call    deBounce    ; First a little displaying time here.
             movfw    Data_Buf    ; Bring the seconds register's value into W.
             andlw    b'00001111'    ; AND the W reg so only the ones digit of seconds (in BCD) remains
             movwf    T0            ; Put it into register for Tube 0 (rightmost)
@@ -1286,16 +1286,16 @@ NewSec
             goto    _00sec
             goto    minutes        ;    ...otherwise we jump to the minutes.
 
-_30sec        movlw    d'40'        ; Spin the digits and then get the date.
+_30sec      movlw    d'40'        ; Spin the digits and then get the date.
             movwf    GenCount    ;   We will spin through n iterations of incrementing the tubes.
             clrf    T2            ; Let the blank tubes play as well.
             clrf    T5            ;
             clrf    T7            ;   ...and T7, too, in case I blanked leading zero of hours
             clrf    LeftDP        ; Clear the decimal points
             clrf    RightDP
-nextSet        movlw    T0            ; ADDRESS of T0
+nextSet     movlw    T0            ; ADDRESS of T0
             movwf    FSR            ;   for indirect addressing.
-nextTubeA    incf    INDF,f        ; Increment the tube value
+nextTubeA   incf    INDF,f        ; Increment the tube value
             movlw    d'10'        ; See if it went over 9
             subwf    INDF,w        ;
             btfsc    STATUS,C    ;   If new tube value <10, C=0
@@ -1311,13 +1311,13 @@ nextTubeA    incf    INDF,f        ; Increment the tube value
             goto    nextSet        ;    ...so if it's clear, go spin more
             goto    GetDate        ; Go display date.
 
-_00sec        call    FillBlanks
+_00sec      call    FillBlanks
             bsf        Flag,Slide    
             call    Loader
             call    deBounce
             goto    minutes        ; WHY IS THIS HERE?
 
-minutes        incf    Mem_Loc,f    ; Increment memory location to get minutes
+minutes     incf    Mem_Loc,f    ; Increment memory location to get minutes
             call    ReadDS1307    ;
             andlw    b'00001111'    ; AND the W reg so only single digit of minutes (in BCD) remains
             movwf    T3            ; Put it into register for Tube 3
@@ -1325,7 +1325,7 @@ minutes        incf    Mem_Loc,f    ; Increment memory location to get minutes
             andlw    b'00001111'    ;   ...and keeping only the right nybble
             movwf    T4            ; Put it in Tube 4
 
-hours        incf    Mem_Loc,f    ; Increment memory location to get hours
+hours       incf    Mem_Loc,f    ; Increment memory location to get hours
             call    ReadDS1307    ;
             andlw    b'00001111'    ; AND the W reg so only single digit of hours (in BCD) remains
             movwf    T6            ; Put it into register for Tube 6
@@ -1334,7 +1334,7 @@ hours        incf    Mem_Loc,f    ; Increment memory location to get hours
             movwf    T7            ; Put it in Tube 7
             btfss    Flag,Clk12    ; See if 12 or 24 hour preference
             goto    _do24        ;   If flag is clear, 24 hour
-_do12        movfw    T6            ; Get hours ones into W
+_do12       movfw    T6            ; Get hours ones into W
             btfsc    T7,0        ; See if bit 0 set (it will be if hour is 10-19)
             addlw    d'10'        ;    ...if so, add 10
             btfsc    T7,1        ; See is bit 1 set (it will be if hour is 20-23)
@@ -1359,30 +1359,30 @@ AM                                ; AM & PM calculated the same from here
             movlw    d'1'        ; and put a one in T7
             movwf    T7            ;
             goto    done12        ;
-under10        movfw    n            ; n<10, so put n in T6
+under10     movfw    n            ; n<10, so put n in T6
             movwf    T6            ;
             movlw    d'10'        ; and put 10 in T7 to blank it
             movwf    T7            ;
             goto    done12        ;
-zerohr        movlw    d'1'        ; Put a 1 in T7
+zerohr      movlw    d'1'        ; Put a 1 in T7
             movwf    T7
             movlw    d'2'        ; Put a 2 in T6
             movwf    T6
 done12                    
 _do24        
-decimalpts    clrf    LeftDP        ; Clear all left decimal places
+decimalpts  clrf    LeftDP        ; Clear all left decimal places
             clrf    RightDP        ; Clear all right decimal places
             movlw    b'00100100'    ; Set decimal points
             btfss    T0,0        ; See if seconds digit is odd or even
             goto    evenSec
             movwf    RightDP        ; Set decimal points
             goto    showTime
-evenSec        movwf    LeftDP        ; ...or set other decimal points
+evenSec     movwf    LeftDP        ; ...or set other decimal points
 showTime    movfw    oldHour        ; Before we display the time, let's do the top-of-the-hour check. Data_Buf still holds hours (BCD). Compare with oldHour.
             subwf    Data_Buf,w    ; 
             btfsc    STATUS,Z    ; If the current Hour is the same as the oldHour value (subtraction is zero)...
             goto    showTime2    ;   ...continue with showing the time.
-TOPofHOUR    movfw    Data_Buf    ;   ...but if they were NOT the same, we get here. First, set oldHour to the current Hour value
+TOPofHOUR   movfw    Data_Buf    ;   ...but if they were NOT the same, we get here. First, set oldHour to the current Hour value
             movwf    oldHour        ;
             subwf    blankStart,w    ; 
             btfss    STATUS,Z    ; See if Hour is same as blankStart hour
@@ -1390,7 +1390,7 @@ TOPofHOUR    movfw    Data_Buf    ;   ...but if they were NOT the same, we get h
             bcf        ShadowB,HVE    ;    ...if so, blank the tubes by turning off the high voltage
             movfw    ShadowB        ; copy ShadowB to PORTB
             movwf    PORTB
-notBlnkSt    movfw    Data_Buf    ; 
+notBlnkSt   movfw    Data_Buf    ; 
             subwf    blankEnd,w    ; 
             btfss    STATUS,Z    ; See if Hour is same as blankEnd hour
             goto    notBlnkEnd    ;    ...if not, jump
@@ -1405,7 +1405,7 @@ notBlnkEnd
             goto    HourRoll    ;      If the hour counter has not reached zero, do the normal
 doAdjust    movwf    hourCount    ;      If it has reached zero, do the adjustment. Begin by resetting the hourCount (as long as I have timeAdj in W now)
             clrf    Mem_Loc        ; Memory location of the seconds register of the DS1307 is 00h
-waitForOne    call    ReadDS1307    ; Now let's read the seconds register from DS1307 (Mem_Loc still zero). Will return with seconds reg in W and Data_Buf
+waitForOne  call    ReadDS1307    ; Now let's read the seconds register from DS1307 (Mem_Loc still zero). Will return with seconds reg in W and Data_Buf
             btfss    Data_Buf,0    ; Wait until we hit 1 second
             goto    waitForOne    ;
             movlw    d'2'        ; If we are slow, jump ahead to 2 seconds after
@@ -1427,7 +1427,7 @@ showTime2
 
 
 
-GetDate        movlw    0x04        ; Memory location of Date (days) in DS1307
+GetDate     movlw    0x04        ; Memory location of Date (days) in DS1307
             movwf    Mem_Loc        ;
             call    ReadDS1307    ; Read the date
             andlw    b'00001111'    ; AND the W reg so only single digit of date remains
@@ -1463,13 +1463,13 @@ GetDate        movlw    0x04        ; Memory location of Date (days) in DS1307
             movwf    T4            ; T7 now in T4
             movfw    m            ;
             movwf    T3            ; T6 now in T3
-release2a    btfsc    PORTA,SW2    ; Wait for relese of SW2 (that got us here)
+release2a   btfsc    PORTA,SW2    ; Wait for relese of SW2 (that got us here)
             goto    release2a    ;    Still waiting
             call     Loader        ; display the date
             call    deBounce    ; Debounce from release of SW2
             movlw    d'120'        ; Show date for this many deBounce times
             movwf    Counter        ;   (With deBounce Delay2=30 and Counter=120, about 3 seconds)
-watch2a        btfsc    PORTA,SW2    ; Switch2 pressed again (to get to Settings)?
+watch2a     btfsc    PORTA,SW2    ; Switch2 pressed again (to get to Settings)?
             goto    Settings    ;    ...yes. Go handle Settings.
             btfsc    PORTA,SW1    ; Switch1 pressed (to go set brightness)?
             goto    SetBright    ;    ...yes. Go set brightness.
@@ -1490,7 +1490,7 @@ Settings    call    FillBlanks    ; Blank the tubes
             movlw    d'5'        ; Hundredths digit of version number.
             movwf    T0
             call    Loader        ; display version number
-Settings2    btfsc    PORTA,SW2    ; Wait for release of SW2
+Settings2   btfsc    PORTA,SW2    ; Wait for release of SW2
             goto    Settings2
             call    deBounce
             clrf    LeftDP
@@ -1509,7 +1509,7 @@ SetHours    call    FillBlanks    ; Blank the tubes
             call    Increment    ; Call routine to increment/decrement setting (returns when Button 2 pressed)
             call    WriteDS1307    ; Write the new hour register value back to DS1307
 
-SetMins        movlw    d'2'        ; Put setting number in Tube 6     (still has 0 in T7)
+SetMins     movlw    d'2'        ; Put setting number in Tube 6     (still has 0 in T7)
             movwf    T6
             movlw    0x01        ; Address of minutes reg in DS1307
             call    GetT1T0        ; Subroutine gets value from Clock reg and puts into T1 & T0
@@ -1530,7 +1530,7 @@ SetMins        movlw    d'2'        ; Put setting number in Tube 6     (still ha
             call    WriteDS1307    ;         
 noMinChange                        ; 
 
-Set1224        movlw    d'3'        ; Put setting number in Tube 6     (still has 0 in T7)
+Set1224     movlw    d'3'        ; Put setting number in Tube 6     (still has 0 in T7)
             movwf    T6
 loop1224    movlw    b'00010010'    ; We might want 12-hour time (that's 12 in packed BCD)...
             btfss    Flag,Clk12    ;
@@ -1560,7 +1560,7 @@ done1224    movlw    d'1'        ; When done, write the setting to EEPROM. (Babb
                                 ; begin write. I won't waitfor it to end because I won't mess with it anytime soon.
             bcf        STATUS,RP0    ; Bank 0
 
-SetDays        movlw    d'4'        ; Put setting number in Tube 6     (still has 0 in T7)
+SetDays     movlw    d'4'        ; Put setting number in Tube 6     (still has 0 in T7)
             movwf    T6
             movlw    0x04        ; Address of date reg in DS1307
             call    GetT1T0        ; Subroutine gets value from Clock reg and puts into T1 & T0
@@ -1584,7 +1584,7 @@ SetMonth    movlw    d'5'        ; Put setting number in Tube 6     (still has 0
             call    Increment    ; Call routine to increment/decrement setting (returns when Button 2 pressed)
             call    WriteDS1307    ; Write the new month register value back to DS1307
 
-SetYear        movlw    d'6'        ; Put setting number in Tube 6     (still has 0 in T7)    
+SetYear     movlw    d'6'        ; Put setting number in Tube 6     (still has 0 in T7)    
             movwf    T6
             movlw    0x06        ; Address of year reg in DS1307
             call    GetT1T0        ; Subroutine gets value from Clock reg and puts into T1 & T0
@@ -1660,55 +1660,55 @@ SetTimeAdjust
             clrf    T6            ; Put 0 in Tube 6
             movfw    timeAdj        ; Get the time adjustment value
             movwf    oldMin        ; Use oldMin to see if a change is made (at the end)
-Bin2BCD        movfw    timeAdj        ; Get the time adjustment value
+Bin2BCD     movfw    timeAdj        ; Get the time adjustment value
             movwf    T0            ; Put the whole thing into the ones (T0) to start
             clrf    T1            ; Clear tens (T1)
             clrf    T2            ; Clear hundreds (T2)
-dotens        movlw    d'10'        ; Subtract dec. 10...
+dotens      movlw    d'10'        ; Subtract dec. 10...
             subwf    T0,w        ;   ...from what remains in the ones. Leave result in W.
             btfss    STATUS,C    ; Look to see if we went negative (if there were no more tens left, C will be clear. Yes, really.)
             goto    dohundreds    ;    If there was no more tens left, jump to doing the hundreds.
             movwf    T0            ;    If we did get a ten out, move the subtraction result from W into the ones... 
             incf    T1,f        ;      ...and increment the tens.
             goto    dotens        ; ...and we go back to look for more tens.
-dohundreds    movlw    d'10'        ; Subtract dec. 10...
+dohundreds  movlw    d'10'        ; Subtract dec. 10...
             subwf    T1,w        ;  ...from what remains in the tens. Leave result in W.
             btfss    STATUS,C    ; Look to see if we went negative (if there were no more hundreds left, C will be clear. Oh, yeah.)
             goto    doneBCD        ;   If there are no more hundreds, we are done.
             movwf    T1            ;   If we did get a hundred, move the subtraction result from W into the tens...
             incf    T2,f        ;     ...and increment the hundreds.
             goto    dotens        ; ...and go look for more hundreds.
-doneBCD        clrf    LeftDP        ; BCD conversion done, and result is in T0-T2. Set DPs to indicate positive or negative.
+doneBCD     clrf    LeftDP        ; BCD conversion done, and result is in T0-T2. Set DPs to indicate positive or negative.
             clrf    RightDP        ;
             btfsc    timeFast,0    ; timeFast=1 for fast, =0 for slow (negative)
             goto    showBCD        ;   If fast, go here
             movlw    b'00001000'    ;   If slow, show DPs
             movwf    LeftDP        ;
             movwF    RightDP        ;
-showBCD        call    Loader
+showBCD     call    Loader
             call    deBounce
             call    Buttons
             btfsc    Flag,short2    ; Exit if button 2 pressed
             goto    exitTASet    ;
             btfsc    Flag,short1    ; If short1 press...
             goto    incTAdj        ;    go increment
-decTAdj        btfss    timeFast,0    ; See if timeFast is set
+decTAdj     btfss    timeFast,0    ; See if timeFast is set
             goto    decSlow        ;    if not, go decrement negative
             movfw    timeAdj        ; See if timaAdj is zero
             btfsc    STATUS,Z    ;   
             goto    hitzipper    ;    if so, go here
             decf    timeAdj,f    ;    if not, normal decrement
             goto    Bin2BCD        ;   
-hitzipper    clrf    timeFast    ; We went negative
+hitzipper   clrf    timeFast    ; We went negative
             incf    timeAdj,f    ; increase in the negative direction
             goto    Bin2BCD        ; go display
-decSlow        incf    timeAdj,f    ; If slow, "decrement" goes more negative
+decSlow     incf    timeAdj,f    ; If slow, "decrement" goes more negative
             btfss    STATUS,Z    ; See if we rolled over
             goto    Bin2BCD        ;   if not, display
             bsf        timeFast,0    ;   if so, make use timeFast=1 at 255
             decf    timeAdj,f    ;     backup from 0 to 255.
             goto    Bin2BCD        ; go display
-incTAdj        btfss    timeFast,0    ; See if timeFast is set
+incTAdj     btfss    timeFast,0    ; See if timeFast is set
             goto    incSlow        ;    if not, go increment negative
             incf    timeAdj,f    ; Increment
             btfss    STATUS,Z    ; See if we incremented 255-->0
@@ -1716,12 +1716,12 @@ incTAdj        btfss    timeFast,0    ; See if timeFast is set
             decf    timeAdj,f    ;    If so, put it back to 255...
             clrf    timeFast    ;      and make timeFast flag negative (slow)
             goto    Bin2BCD        ; go display
-incSlow        decf    timeAdj,f    ; If slow, "increment" brings you closer to zero
+incSlow     decf    timeAdj,f    ; If slow, "increment" brings you closer to zero
             btfss    STATUS,Z    ; See if we hit zero
             goto    Bin2BCD        ;   If not, go display
             bsf        timeFast,0    ;   If so, set timeFast to 1 (fast)
             goto    Bin2BCD        ; go display
-exitTASet    clrf    LeftDP
+exitTASet   clrf    LeftDP
             clrf    RightDP
             movfw    oldMin        ; Get the previous value into W
             subwf    timeAdj,w    ; See if any change was made
@@ -1739,7 +1739,7 @@ exitTASet    clrf    LeftDP
             movlw    0xAA        ;
             movwf    EECON2        ; Write AAh
             bsf        EECON1,WR    ; Set WR bit
-waitwrite    btfsc    EECON1,WR    ; Wait until write is done
+waitwrite   btfsc    EECON1,WR    ; Wait until write is done
             goto    waitwrite    ;
             movfw    timeFast    ; Get the final timeFast value into W
             movwf    EEDATA        ; Moves number to be witten into EEDATA
@@ -1754,7 +1754,7 @@ waitwrite    btfsc    EECON1,WR    ; Wait until write is done
             bcf        STATUS,RP0    ; Bank 0
 noAdjChange            
 
-SetBright    btfsc    PORTA,SW1    ; If we got here from Date, SW1 might still be pressed. Wait for release.
+SetBright   btfsc    PORTA,SW1    ; If we got here from Date, SW1 might still be pressed. Wait for release.
             goto    SetBright    ;
             call    deBounce    ;
             call    FillBlanks    ; Blank the tubes (in case I jump directly here)
@@ -1764,7 +1764,7 @@ SetBright    btfsc    PORTA,SW1    ; If we got here from Date, SW1 might still b
             movwf    T6
             movfw    brightSet    ; Get brightness preference for clock
             movwf    T0            ;    and put it into T0 for display.
-loopBrSet    movfw    T0            ; Update bright from T0 as we loop so the effect can be seen
+loopBrSet   movfw    T0            ; Update bright from T0 as we loop so the effect can be seen
             movwf    bright        ;
             call    Loader        ; display: 11_____B Where B is brightness 0-7
             call    Buttons        ;
@@ -1780,7 +1780,7 @@ incBrSet    incf    T0,f        ; Increment brightness
             movlw    b'00000111'    ; To make sure it stays below 8, do this
             andwf    T0,f        ;    and thing (it will roll to zero).
             goto    loopBrSet    ;
-exitBrSet    movfw    T0            ; Get the brightness
+exitBrSet   movfw    T0            ; Get the brightness
             movwf    brightSet    ;
             bsf        STATUS,RP0    ; Bank 1
             movwf    EEDATA        ; Moves number to be witten into EEDATA
