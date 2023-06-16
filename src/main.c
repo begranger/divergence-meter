@@ -130,9 +130,9 @@ void blink(unsigned char n) {
     // max val of n = 255, i takes on 0->254, so max num blinks = 255
     for (unsigned char i = 0; i < n; i++) {
         RB0 = 1;          // Turn on LED
-        __delay_ms(1000); // Wait for 1s
+        __delay_ms(500); // Wait for 1s
         RB0 = 0;          // Turn off LED
-        __delay_ms(1000); // Wait for 1s
+        __delay_ms(500); // Wait for 1s
     }
     return;
 }
@@ -142,8 +142,8 @@ void main(void) {
     init();
     
     while (1) {
-        //blink(100);
-        RB0 = 1;
+        blink(100);
+        //RB0 = 1; 
         
         //check_buttons(); // See if button is being pressed and react if so
         //get_time();      // Get time from clock chip and write to tubes
