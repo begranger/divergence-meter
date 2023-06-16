@@ -13,8 +13,6 @@
 
 #define _XTAL_FREQ 4000000
 
-//#define SW
-
 void init_regs(void) {
     // Core SFRs --------------------------------------------------------------
     // STATUS - No changes needed
@@ -23,8 +21,6 @@ void init_regs(void) {
     // PIE1   - No changes needed, periph interrupt enable reg, GIE=0, so DC
     // PIR1   - No changes needed, periph interrupt reg, GIE=0, so dont care
     // PCON   - No changes needed, b3=OSFC=mclk, 1=4MHz (POR val), 0=48kHz
-
-// change it to go port by port, pin by pin
 
     // Port A -----------------------------------------------------------------
     // At power-up, the values in the PORTA and PORTB output regs are unknown
@@ -108,7 +104,6 @@ void init_regs(void) {
     // probably don't cares. Also don't care about the RBIF circuitry for the
     // same reason as RB4 and RB5 above.
     // All pins done!
-    
     return;
 }
 
@@ -129,10 +124,10 @@ void check_buttons(void) {
 void blink(unsigned char n) {
     // max val of n = 255, i takes on 0->254, so max num blinks = 255
     for (unsigned char i = 0; i < n; i++) {
-        RB0 = 1;          // Turn on LED
-        __delay_ms(500); // Wait for 1s
-        RB0 = 0;          // Turn off LED
-        __delay_ms(500); // Wait for 1s
+        RB0 = 1;         // Turn on LED
+        __delay_ms(500); // Wait for 0.5s
+        RB0 = 0;         // Turn off LED
+        __delay_ms(500); // Wait for 0.5s
     }
     return;
 }
