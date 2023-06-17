@@ -1,5 +1,6 @@
-//Had to add proc dir to prj-settings bc it wasnt going in for some reason
+// Had to add proc dir to prj-settings bc it wasnt going in for some reason
 #include <xc.h>
+#include "i2c.h"
 
 // Set configuration bits, MSB to LSB
 #pragma config CP    = OFF      // Flash mem code protection
