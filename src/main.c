@@ -131,13 +131,13 @@ void init(void) {
 #define SDA TRISA1 // I2C data
 #define DS3232 0x68 // I2C bus address of DS3232 chip (7 LSBs)
 
-bit byte_out(unsigned char byte) {
+char byte_out(char byte) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as outputs (lines low)
     // Assumes that function is entered at/around the time SCL was brought low
     
     // MSB is always transmitted first
-    for (unsigned char i = 0; i < 8; i++) {
+    for (char i = 0; i < 8; i++) {
         // On first iteration, 7-i = 7, so we put MSB at b0 and transfer out
         // On last iteration, 7-i = 0, so we dont shift at all and send b0 asis
         
@@ -158,9 +158,8 @@ bit byte_out(unsigned char byte) {
  *   ctrl_addr: pointer to char array in controller to being transfer at
  *   prph_addr: address in the peripheral's memory map to begin transfer at
  *   num_bytes: self-explanatory
- * Returns 1 if successful, 0 if not */
-bit transfer_bytes(bit direction, unsigned char i2c_addr, unsigned char* ctrl_addr,
-                   unsigned char prph_addr, unsigned char num_bytes) {
+ * Returns 0 if successful, error code if not */
+char transfer_bytes(bit direction, char i2c_addr, char* ctrl_addr, char prph_addr, char num_bytes) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as inputs (lines high)
     
@@ -181,9 +180,9 @@ void check_buttons(void) {
     //if 
 }
 
-void blink(unsigned char n) {
+void blink(char n) {
     // max val of n = 255, i takes on 0->254, so max num blinks = 255
-    for (unsigned char i = 0; i < n; i++) {
+    for (char i = 0; i < n; i++) {
         RB0 = 1;         // Turn on LED
         __delay_ms(500); // Wait for 0.5s
         RB0 = 0;         // Turn off LED
