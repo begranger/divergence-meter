@@ -1,6 +1,3 @@
-#ifndef I2C_H
-#define	I2C_H
-
 /* Read or write the specified number of bytes to/from a peripheral on I2C bus
  * from/to the given array
  * Inputs:
@@ -13,8 +10,6 @@
  */
 bit transfer_bytes(bit            direction,
                    unsigned char  i2c_addr,
-                   unsigned char  ctrl_addr,
-                   unsigned char* prph_addr,
+                   unsigned char* ctrl_addr,
+                   unsigned char  prph_addr,
                    unsigned char  num_bytes);
-
-#endif	/* I2C_H */

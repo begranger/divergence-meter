@@ -1,5 +1,6 @@
 // Had to add proc dir to prj-settings bc it wasnt going in for some reason
 #include <xc.h>
+#include "fclk.h"
 #include "i2c.h"
 
 // Set configuration bits, MSB to LSB
@@ -12,7 +13,7 @@
 #pragma config WDTE  = OFF      // Watchdog timer
 #pragma config FOSC  = INTOSCIO // Use internal osc, RA6/RA7 are general I/Os
 
-#define _XTAL_FREQ 4000000
+#define DS3232 0x68 // I2C bus address of DS3232 chip (7 LSBs)
 
 void init_regs(void) {
     // Core SFRs --------------------------------------------------------------

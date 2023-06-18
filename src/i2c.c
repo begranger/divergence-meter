@@ -1,4 +1,5 @@
 #include <xc.h>
+#include "fclk.h"
 
 // On init, we set the output regs on pins RA<1:0> to 0. Therefore by toggling
 // the ports b/w input and output we effectively toggle b/w connecting putting
@@ -8,8 +9,6 @@
 // the pin to the 0 in the RA0 output reg. This pulls the line low (sends 0)
 #define SCL TRISA0 // I2C clock
 #define SDA TRISA1 // I2C data
-
-#define _XTAL_FREQ 4000000
 
 bit byte_out(unsigned char byte) {
     // Assumes that output regs on both pins are set to 0
@@ -30,7 +29,7 @@ bit byte_out(unsigned char byte) {
     
 }
 
-bit transfer_bytes(bit direction, unsigned char i2c_addr, unsigned char ctrl_addr, unsigned char* prph_addr, unsigned char num_bytes) {
+bit transfer_bytes(bit direction, unsigned char i2c_addr, unsigned char* ctrl_addr, unsigned char prph_addr, unsigned char num_bytes) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as inputs (lines high)
     
