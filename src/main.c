@@ -1,8 +1,8 @@
 // Had to add proc dir to prj-settings bc it wasnt going in for some reason
-#include <xc.h>     // device macros
-#include "fclk.h"   // need for __delay_*s()
-#include "pic.h"    // pic init and subroutines
-#include "ds3232.h" // clock chip init and subroutines
+#include <xc.h>         // device macros
+#include "_XTAL_FREQ.h" // need for __delay_*s()
+#include "pic.h"        // pic init and subroutines
+#include "ds3232.h"     // clock chip init and subroutines
 
 char init(void) {
     init_pic();

@@ -1,5 +1,5 @@
-#include <xc.h>   // device macros
-#include "fclk.h" // need for __delay_*s()
+#include <xc.h>         // device macros
+#include "_XTAL_FREQ.h" // need for __delay_*s()
 
 /* On init, we set the output regs on pins RA<1:0> to 0. Therefore by toggling
  * the ports b/w input and output we effectively toggle b/w connecting putting
@@ -9,7 +9,9 @@
  * the pin to the 0 in the RA0 output reg. This pulls the line low (sends 0) */
 #define SCL TRISA0 // I2C clock
 #define SDA TRISA1 // I2C data
-#define I2C_ADDR 0x68 // I2C bus address of DS3232 chip (7 LSBs)
+
+#define I2C_ADDR 0x68        // I2C bus address of DS3232 chip (7 LSBs)
+#define I2C_TCLK_US_DIV_3 20 // 1/3 of I2C bus clock period in microseconds
 
 char byte_out(char byte) {
     // Assumes that output regs on both pins are set to 0
