@@ -10,6 +10,7 @@
 #define SCL TRISA0 // I2C clock
 #define SDA TRISA1 // I2C data
 
+#define I2C_PIN RA1          // Pin to read I2C input from when receiving
 #define I2C_ADDR 0x68        // I2C bus address of DS3232 chip (7 LSBs)
 #define I2C_TCLK_US_DIV_3 20 // 1/3 of I2C bus clock period in microseconds
 
@@ -18,19 +19,40 @@ char byte_out(char byte) {
     // Assumes that both pins are configured as outputs (lines low)
     // Assumes that function is entered at/around the time SCL was brought low
     
+    // Wait for one Tclk/3 step, then begin w data
+    __delay_us(I2C_TCLK_US_DIV_3);
+    
     // MSB is always transmitted first
     for (char i = 0; i < 8; i++) {
         // On first iteration, 7-i = 7, so we put MSB at b0 and transfer out
         // On last iteration, 7-i = 0, so we dont shift at all and send b0 asis
         
-        // Wait half a low-clock time (quarter Tclk) then change data
-        HERE @ 11p 6/16/23 - draw timing of data and clock, then maybe define
-        macros for the various time intervals, eg T_L1, T_L2, etc
-        
-        
+        SDA = (byte >> (7-i)) & 1;     // change data
+        __delay_us(I2C_TCLK_US_DIV_3); // setup time
+        SCL = 1;                       // clock rise
+        __delay_us(I2C_TCLK_US_DIV_3); // clock high
+        SCL = 0;                       // clock fall
+        __delay_us(I2C_TCLK_US_DIV_3); // hold time
     }
     
+    // Set SDA to 1 (makes pin an input, disables buffer and allows line to be
+    // pulled up) so that device can ack or nack, and we can read it
+    SDA = 1;
+    __delay_us(I2C_TCLK_US_DIV_3);   // setup time (for device)
+    SCL = 1;                         // clock rise
+    __delay_us(I2C_TCLK_US_DIV_3/2);
+    char ack = I2C_PIN;               // Sample pin halfway through clock pulse
+    __delay_us(I2C_TCLK_US_DIV_3/2);
+    SCL = 0;                         // clock fall
+    __delay_us(I2C_TCLK_US_DIV_3);   // hold time
+    
+    // Bring SDA back to 0 (as we found it, SCL is already there), then add
+    // another clock third for buffer before returning (makes it symmetric)
+    SDA = 0;
+    __delay_us(I2C_TCLK_US_DIV_3);
+    return ack;
 }
+
 
 /* Read or write the specified number of bytes to/from a peripheral on I2C bus
  * from/to the given array
@@ -47,11 +69,11 @@ char transfer_bytes(bit direction, char* ctrl_addr, char prph_addr, char num_byt
     // Signal transfer-start by bringing SDA low while SCL is high, then bring
     // SCL low as well
     SDA = 0;
-    __delay_us(20); // t_HD:STA
+    __delay_us(I2C_TCLK_US_DIV_3); // t_HD:STA, must be > 4us, use Tclk/3
     SCL = 0;
     
     // Send out the I2C address and R/W flag to select peripheral
-    byte_out((I2C_ADDR << 1) | direction);
+    char rv = byte_out((I2C_ADDR << 1) | direction);
 
 }
 
