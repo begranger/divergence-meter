@@ -2,15 +2,15 @@
 #include "_XTAL_FREQ.h" // need for __delay_*s()
 
 /* On init, we set the output regs on pins RA<1:0> to 0. Therefore by toggling
- * the ports b/w input and output we effectively toggle b/w connecting putting
- * the pin in hi-z to then be pulled up by external resistor, and connecting
- * the pin to 0 (pulling the line low). Init leaves both as inputs (line high)
+ * the ports b/w input and output we effectively toggle b/w putting the pin i
+ * hi-z to then be pulled up by external resistor, and connecting the pin to 0
+ * (pulling the line low). Init leaves both as inputs (line high)
  * e.g. doing SCL = 0 sets RA0 to an output, enabling the buffer and connecting
  * the pin to the 0 in the RA0 output reg. This pulls the line low (sends 0) */
 #define SCL TRISA0 // I2C clock
 #define SDA TRISA1 // I2C data
 
-#define I2C_PIN RA1          // Pin to read I2C input from when receiving
+#define I2C_SDA_PIN RA1      // Pin to read I2C input from when receiving
 #define I2C_ADDR 0x68        // I2C bus address of DS3232 chip (7 LSBs)
 #define I2C_TCLK_US_DIV_3 20 // 1/3 of I2C bus clock period in microseconds
 
@@ -41,7 +41,7 @@ char byte_out(char byte) {
     __delay_us(I2C_TCLK_US_DIV_3);   // setup time (for device)
     SCL = 1;                         // clock rise
     __delay_us(I2C_TCLK_US_DIV_3/2);
-    char ack = I2C_PIN;               // Sample pin halfway through clock pulse
+    char ack = I2C_SDA_PIN;          // Sample pin halfway through clock pulse
     __delay_us(I2C_TCLK_US_DIV_3/2);
     SCL = 0;                         // clock fall
     __delay_us(I2C_TCLK_US_DIV_3);   // hold time
