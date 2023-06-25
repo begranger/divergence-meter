@@ -18,6 +18,7 @@ char byte_out(char byte) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as outputs (lines low)
     // Assumes that function is entered at/around the time SCL was brought low
+    //   (when first called after START)
     
     // Wait for one Tclk/3 step, then begin w data
     __delay_us(I2C_TCLK_US_DIV_3);
@@ -54,6 +55,44 @@ char byte_out(char byte) {
 }
 
 
+char byte_in(last_byte) {
+    // Assumes that output regs on both pins are set to 0
+    // Assumes that both pins are configured as outputs (lines low)
+
+    // Wait for one Tclk/3 step, then pull SDA high, giving control to prph
+    __delay_us(I2C_TCLK_US_DIV_3);
+    SDA = 1;
+    
+    // Clock each bit over and store in shift reg
+    char shift_ref = 0;
+    for (char i = 0;, i < num_bytes; i++) {
+        __delay_us(I2C_TCLK_US_DIV_3);
+        SCL = 1;
+        __delay_us(I2C_TCLK_US_DIV_3/2);
+        shift_ref |= I2C_SDA_PIN << (7-i);
+        __delay_us(I2C_TCLK_US_DIV_3/2);
+        SCL = 0;
+        __delay_us(I2C_TCLK_US_DIV_3);
+    }
+    
+    // At this time, device should release (pull up) SDA to let us ACK/NACK,
+    // so SDA will be set to whatever it was when we were driving, ie 1.
+    // Therefore, if last byte, dont need to change to send NACK (1)
+    if (!last_byte) { SDA = 0; }
+    __delay_us(I2C_TCLK_US_DIV_3);
+    SCL = 1;
+    __delay_us(I2C_TCLK_US_DIV_3);
+    SCL = 0;
+    __delay_us(I2C_TCLK_US_DIV_3);
+    
+    // Set SDA back to 0 to leave it as we found it and add buffer
+    SDA = 0;
+    __delay_us(I2C_TCLK_US_DIV_3);
+    
+    return shift_reg;
+}
+
+
 /* Read or write the specified number of bytes to/from a peripheral on I2C bus
  * from/to the given array
  * Inputs:
@@ -66,19 +105,70 @@ char transfer_bytes(bit direction, char* ctrl_addr, char prph_addr, char num_byt
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as inputs (lines high)
     
-    // Signal transfer-start by bringing SDA low while SCL is high, then bring
-    // SCL low as well
+    // Signal transfer-start by bringing SDA low while SCL is high, then
+    // bring SCL low as well
     SDA = 0;
     __delay_us(I2C_TCLK_US_DIV_3); // t_HD:STA, must be > 4us, use Tclk/3
     SCL = 0;
     
     // Send out the I2C address and R/W flag to select peripheral
-    char rv = byte_out((I2C_ADDR << 1) | direction);
+    // Note: We always jamset mem pointer when reading. Doing
+    // so requires 2 transfers, the first being a write of the
+    // address to move pointer to. Therefore ALWAYS send the first
+    // I2C address as a write transfer (hence '| 0') below
+    // Note: ack is active low, so if zero is returned then all ok
+    if (byte_out((I2C_ADDR << 1) | 0) {
+        return 1;
+    }
 
+    // Set addr pointer in device
+    if (byte_out(prph_addr)) {
+        return 2;
+    }
+
+    if (direction) { // if read
+
+        // Execute repeated-start to then begin read
+        __delay_us(I2C_TCLK_US_DIV_3); // buffer
+        SDA = 1;
+        __delay_us(I2C_TCLK_US_DIV_3); // t_SU:DAT (even though not transmitting data)
+        SCL = 1;
+        __delay_us(I2C_TCLK_US_DIV_3); // t_SU:STA > 4.7us
+        SDA = 0;
+        __delay_us(I2C_TCLK_US_DIV_3); // t_HD:STA > 4.0us
+        SCL = 0;
+
+        // Transmit I2C address again, this time w R/!W = 1
+        if (byte_out((I2C_ADDR << 1) | 1) {
+            return 3;
+        }
+
+        // read all bytes into buffer, sending a NACK (1) on the last one
+        // so that device knows to release SDA so we can generate STOP
+        for (char i = 0; i < num_bytes-1; i++) {
+            ctrl_addr[i] = byte_in(0);
+        }
+        ctrl_addr[num_bytes-1] = byte_in(1);
+    }
+    else { // write
+    
+        for (char i = 0; i < num_bytes; i++) {
+            if (byte_out(ctrl_addr[i])) { return i+4; }
+        }
+    }
+    
+    // Generate STOP and return (assumes both lines are low at this point)
+    // stop condition leaves bus in idle (both lines high)
+    __delay_us(I2C_TCLK_US_DIV_3); // buffer
+    SCL = 1;
+    __delay_us(I2C_TCLK_US_DIV_3); // t_SU:STO > 4.7us
+    SDA = 1;
+    __delay_us(I2C_TCLK_US_DIV_3); // buffer
+    return 0; 
 }
 
 
 char init_ds3232(void) {
     // Make sure DS3232 (clock chip) is up and running
-    return 0x00;
+    return 0;
 }
