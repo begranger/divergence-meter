@@ -1,4 +1,5 @@
 #include <xc.h>         // device macros
+#include <stdbool.h>    // boolean type macro (just unsigned char under hood)
 #include "_XTAL_FREQ.h" // need for __delay_*s()
 
 /* On init, we set the output regs on pins RA<1:0> to 0. Therefore by toggling
@@ -14,7 +15,7 @@
 #define I2C_ADDR 0x68        // I2C bus address of DS3232 chip (7 LSBs)
 #define I2C_TCLK_US_DIV_3 20 // 1/3 of I2C bus clock period in microseconds
 
-char byte_out(char byte) {
+bool byte_out(char dout) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as outputs (lines low)
     // Assumes that function is entered at/around the time SCL was brought low
@@ -28,7 +29,7 @@ char byte_out(char byte) {
         // On first iteration, 7-i = 7, so we put MSB at b0 and transfer out
         // On last iteration, 7-i = 0, so we dont shift at all and send b0 asis
         
-        SDA = (byte >> (7-i)) & 1;     // change data
+        SDA = (dout >> (7-i)) & 1;     // change data
         __delay_us(I2C_TCLK_US_DIV_3); // setup time
         SCL = 1;                       // clock rise
         __delay_us(I2C_TCLK_US_DIV_3); // clock high
@@ -42,7 +43,7 @@ char byte_out(char byte) {
     __delay_us(I2C_TCLK_US_DIV_3);   // setup time (for device)
     SCL = 1;                         // clock rise
     __delay_us(I2C_TCLK_US_DIV_3/2);
-    char ack = I2C_SDA_PIN;          // Sample pin halfway through clock pulse
+    bool ack = I2C_SDA_PIN;          // Sample pin halfway through clock pulse
     __delay_us(I2C_TCLK_US_DIV_3/2);
     SCL = 0;                         // clock fall
     __delay_us(I2C_TCLK_US_DIV_3);   // hold time
@@ -51,11 +52,12 @@ char byte_out(char byte) {
     // another clock third for buffer before returning (makes it symmetric)
     SDA = 0;
     __delay_us(I2C_TCLK_US_DIV_3);
+    
     return ack;
 }
 
 
-char byte_in(char last_byte) {
+char byte_in(bool last_byte) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as outputs (lines low)
 
@@ -64,12 +66,12 @@ char byte_in(char last_byte) {
     SDA = 1;
     
     // Clock each bit over and store in shift reg
-    char shift_reg = 0;
+    char din = 0;
     for (char i = 0; i < 8; i++) {
         __delay_us(I2C_TCLK_US_DIV_3);
         SCL = 1;
         __delay_us(I2C_TCLK_US_DIV_3/2);
-        shift_reg |= I2C_SDA_PIN << (7-i);
+        din |= I2C_SDA_PIN << (7-i);
         __delay_us(I2C_TCLK_US_DIV_3/2);
         SCL = 0;
         __delay_us(I2C_TCLK_US_DIV_3);
@@ -89,7 +91,7 @@ char byte_in(char last_byte) {
     SDA = 0;
     __delay_us(I2C_TCLK_US_DIV_3);
     
-    return shift_reg;
+    return din;
 }
 
 
@@ -101,7 +103,7 @@ char byte_in(char last_byte) {
  *   prph_addr: address in the peripheral's memory map to begin transfer at
  *   num_bytes: self-explanatory
  * Returns 0 if successful, error code if not */
-char transfer_bytes(bit direction, char* ctrl_addr, char prph_addr, char num_bytes) {
+char transfer_bytes(bool direction, char* ctrl_addr, char prph_addr, char num_bytes) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as inputs (lines high)
     
