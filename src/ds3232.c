@@ -55,7 +55,7 @@ char byte_out(char byte) {
 }
 
 
-char byte_in(last_byte) {
+char byte_in(char last_byte) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as outputs (lines low)
 
@@ -64,12 +64,12 @@ char byte_in(last_byte) {
     SDA = 1;
     
     // Clock each bit over and store in shift reg
-    char shift_ref = 0;
-    for (char i = 0;, i < num_bytes; i++) {
+    char shift_reg = 0;
+    for (char i = 0; i < 8; i++) {
         __delay_us(I2C_TCLK_US_DIV_3);
         SCL = 1;
         __delay_us(I2C_TCLK_US_DIV_3/2);
-        shift_ref |= I2C_SDA_PIN << (7-i);
+        shift_reg |= I2C_SDA_PIN << (7-i);
         __delay_us(I2C_TCLK_US_DIV_3/2);
         SCL = 0;
         __delay_us(I2C_TCLK_US_DIV_3);
@@ -117,7 +117,7 @@ char transfer_bytes(bit direction, char* ctrl_addr, char prph_addr, char num_byt
     // address to move pointer to. Therefore ALWAYS send the first
     // I2C address as a write transfer (hence '| 0') below
     // Note: ack is active low, so if zero is returned then all ok
-    if (byte_out((I2C_ADDR << 1) | 0) {
+    if (byte_out((I2C_ADDR << 1) | 0)) {
         return 1;
     }
 
@@ -139,7 +139,7 @@ char transfer_bytes(bit direction, char* ctrl_addr, char prph_addr, char num_byt
         SCL = 0;
 
         // Transmit I2C address again, this time w R/!W = 1
-        if (byte_out((I2C_ADDR << 1) | 1) {
+        if (byte_out((I2C_ADDR << 1) | 1)) {
             return 3;
         }
 
