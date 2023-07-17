@@ -15,7 +15,7 @@
 #define I2C_ADDR 0x68        // I2C bus address of DS3232 chip (7 LSBs)
 #define I2C_TCLK_US_DIV_3 20 // 1/3 of I2C bus clock period in microseconds
 
-bool byte_out(char dout) {
+bool byte_out(uint8_t dout) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as outputs (lines low)
     // Assumes that function is entered at/around the time SCL was brought low
@@ -25,7 +25,7 @@ bool byte_out(char dout) {
     __delay_us(I2C_TCLK_US_DIV_3);
     
     // MSB is always transmitted first
-    for (char i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < 8; i++) {
         // On first iteration, 7-i = 7, so we put MSB at b0 and transfer out
         // On last iteration, 7-i = 0, so we dont shift at all and send b0 asis
         
@@ -57,7 +57,7 @@ bool byte_out(char dout) {
 }
 
 
-char byte_in(bool last_byte) {
+uint8_t byte_in(bool last_byte) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as outputs (lines low)
 
@@ -66,8 +66,8 @@ char byte_in(bool last_byte) {
     SDA = 1;
     
     // Clock each bit over and store in shift reg
-    char din = 0;
-    for (char i = 0; i < 8; i++) {
+    uint8_t din = 0;
+    for (uint8_t i = 0; i < 8; i++) {
         __delay_us(I2C_TCLK_US_DIV_3);
         SCL = 1;
         __delay_us(I2C_TCLK_US_DIV_3/2);
@@ -99,11 +99,11 @@ char byte_in(bool last_byte) {
  * from/to the given array
  * Inputs:
  *   direction: 1 = read, 0 = write (matches I2C convention)
- *   ctrl_addr: pointer to char array in controller to being transfer at
+ *   ctrl_addr: pointer to uint8_t array in controller to being transfer at
  *   prph_addr: address in the peripheral's memory map to begin transfer at
  *   num_bytes: self-explanatory
  * Returns 0 if successful, error code if not */
-char transfer_bytes(bool direction, char* ctrl_addr, char prph_addr, char num_bytes) {
+uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, uint8_t num_bytes) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as inputs (lines high)
     
@@ -147,14 +147,14 @@ char transfer_bytes(bool direction, char* ctrl_addr, char prph_addr, char num_by
 
         // read all bytes into buffer, sending a NACK (1) on the last one
         // so that device knows to release SDA so we can generate STOP
-        for (char i = 0; i < num_bytes-1; i++) {
+        for (uint8_t i = 0; i < num_bytes-1; i++) {
             ctrl_addr[i] = byte_in(0);
         }
         ctrl_addr[num_bytes-1] = byte_in(1);
     }
     else { // write
     
-        for (char i = 0; i < num_bytes; i++) {
+        for (uint8_t i = 0; i < num_bytes; i++) {
             if (byte_out(ctrl_addr[i])) { return i+4; }
         }
     }
@@ -170,7 +170,7 @@ char transfer_bytes(bool direction, char* ctrl_addr, char prph_addr, char num_by
 }
 
 
-char init_ds3232(void) {
+uint8_t init_ds3232(void) {
     // Make sure DS3232 (clock chip) is up and running
     return 0;
 }

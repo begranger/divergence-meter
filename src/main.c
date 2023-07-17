@@ -4,9 +4,9 @@
 #include "pic.h"        // pic init and subroutines
 #include "ds3232.h"     // clock chip init and subroutines
 
-char init(void) {
+uint8_t init(void) {
     init_pic();
-    char rv = init_ds3232();
+    uint8_t rv = init_ds3232();
     return rv;
 }
 
@@ -14,9 +14,9 @@ void check_buttons(void) {
     //if 
 }
 
-void blink(char n) {
+void blink(uint8_t n) {
     // max val of n = 255, i takes on 0->254, so max num blinks = 255
-    for (char i = 0; i < n; i++) {
+    for (uint8_t i = 0; i < n; i++) {
         RB0 = 1;         // Turn on LED
         __delay_ms(500); // Wait for 0.5s
         RB0 = 0;         // Turn off LED
