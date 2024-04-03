@@ -4,12 +4,6 @@
 #include "pic.h"        // pic init and subroutines
 #include "ds3232.h"     // clock chip init and subroutines
 
-uint8_t init(void) {
-    init_pic();
-    uint8_t rv = init_ds3232();
-    return rv;
-}
-
 void check_buttons(void) {
     //if 
 }
@@ -27,7 +21,8 @@ void blink(uint8_t n) {
 
 void main(void) {
     
-    init();
+    init_pic();
+    uint8_t rv = init_ds3232();
     
     while (1) {
         blink(100);

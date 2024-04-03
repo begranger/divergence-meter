@@ -3,7 +3,7 @@
 // Set configuration bits, MSB to LSB
 #pragma config CP    = OFF      // Flash mem code protection
 #pragma config CPD   = OFF      // Data mem code protection
-#pragma config LVP   = ON       // Low voltage programming
+#pragma config LVP   = OFF      // Low voltage programming
 #pragma config BOREN = ON       // Brown-out detect/reset
 #pragma config MCLRE = ON       // RA5=MCLR
 #pragma config PWRTE = ON       // Power-up timer
@@ -11,7 +11,7 @@
 #pragma config FOSC  = INTOSCIO // Use internal osc, RA6/RA7 are general I/Os
 
 void init_pic(void) {
-    // Core SFRs --------------------------------------------------------------
+    // 'Core' SFRs ------------------------------------------------------------
     // STATUS - No changes needed
     // OPTION - No changes needed, all PORTB weak-pullups disabled on POR
     // INTCON - No changes needed, interrupt control reg, GIE=0 on POR
@@ -27,8 +27,8 @@ void init_pic(void) {
     PORTA = 0x00;
     
     // Pin directions: 0 = output, 1 = input
-    TRISA0 = 0b1; // I2C clock (SCL), set as input to pullup line for now
-    TRISA1 = 0b1; // I2C data (SDA), set as input to pullup line for now
+    TRISA0 = 0b1; // I2C clock (SCL), set as input for now (pulled up by ext. R)
+    TRISA1 = 0b1; // I2C data  (SDA), set as input for now (pulled up by ext. R)
     TRISA2 = 0b1; // SW1 input
     TRISA3 = 0b1; // SW2 input
     TRISA4 = 0b1; // NC, leave as input (output buffer in Hi-Z)
@@ -36,8 +36,11 @@ void init_pic(void) {
     TRISA6 = 0b1; // NC, OSC2 pin
     TRISA7 = 0b1; // NC, OSC1 pin
 
-    // Pin circuits
-    // RA<3:0> are configured as inputs. To function as such, we must set
+    // Pin circuits ('peripheral' SFRs) - Just went through the circuit of each
+    // pin on Port A (DS 5.1) and made sure SFRs controlling peripherals on the
+    // pin were set correctly.
+    //
+    // RA<3:0> are used as digital I/O. To function as such, we must set
     // the comparators on pins RA<3:0> to off state, so that those pins are
     // treated as digital inputs (Input mode = D, see FIG 5-1 and 10-1 in DS).
     // On POR, the comparators come up in the Reset state which treats the pins
@@ -49,7 +52,7 @@ void init_pic(void) {
     CMCON |= 0x07;
     // Dont need to disable Vref output on RA2 bc VRCON.VROE=0 on POR
     // (see FIG 5-2 and REGISTER 11-1)
-    // Dont care about Comparator Output mux on RA3 bc pin is an configured as
+    // Dont care about Comparator Output mux on RA3 bc pin is configured as
     // in input, so the buffer is open.
     // Dont care about anything in RA4 bc its a NC.
     // RA5 cannot be written to or read from, dedicated to MCLR line
@@ -68,13 +71,13 @@ void init_pic(void) {
     TRISB6 = 0b1; // Programming clock (PGC)
     TRISB7 = 0b1; // Programming data (PGD)
 
-    // Pin circuits
+    // Pin circuits ('peripheral' SFRs)
     // All PORTB pins have an optional internal weak-pullup. However, its
     // turned off by default, i.e. NotRBPU=1 on POR, so I assume the gate is
     // left open and Vdd is cut off from the circuit there, so we dont need
     // to do anything with it for any of the pins.
-    // For RA0, dont care about interrupt line out bc GIE=0 on POR.
-    // For RA<2:1>, SPEN is 0 on POR, so the USART lines are not selected in
+    // For RB0, dont care about interrupt line out bc GIE=0 on POR.
+    // For RB<2:1>, SPEN is 0 on POR, so the USART lines are not selected in
     // in the mux that drives output buffer. Not sure what '!Peripheral OE' is
     // but its a dont-care bc TRIS Latch is 0 (bc output), so the AND output is
     // always zero and therefore the output buffer is always closed (enabled).
@@ -85,12 +88,9 @@ void init_pic(void) {
     // default- may need to verify this in hardware (TODO). This pin also has
     // the '!Peripheral OE' signal, which is again a dont care bc TRIS Latch is
     // a 0 (bc output), so the output buffer is always enabled.
-    // Pin RB4 is the PGM pin. This program configures the pin as an output,
-    // however, the LVP bit is enabled by default (and we dont turn it off), so
-    // the output buffer will remain off, even though we've set TRISB4 = 0.
-    // Unless we get a PICkit to do HVP, this pin must remain an input. And we
-    // need it to be an output bc of the board traces... so need PICkit. Don't
-    // care about the RBIF circuitry be GIE = 0
+    // For Pin RB4, we've disabled LVP, so the pin can be used as general
+    // purpose digital I/O (output in our case). Don't care about the RBIF
+    // circuitry bc GIE = 0
     // Pin RB5 is all good as an output, dont care about RBIF circuitry for
     // same reason as RB4 above
     // Pins RB<7:6> are configured as inputs. Output buffer is disabled bc
