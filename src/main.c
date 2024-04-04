@@ -4,9 +4,9 @@
 #include "pic.h"        // pic init and subroutines
 #include "ds3232.h"     // clock chip init and subroutines
 
-void check_buttons(void) {
-    //if 
-}
+#define WR 0 // I2C transfer directions
+#define RD 1
+
 
 void blink(uint8_t n) {
     // max val of n = 255, i takes on 0->254, so max num blinks = 255
@@ -19,13 +19,31 @@ void blink(uint8_t n) {
     return;
 }
 
+
+void blink_bits(uint8_t to_blink) {
+    // MSB first
+    for (uint8_t i = 0; i < 8; i++) {
+        RB0 = (to_blink >> (7-i)) & 1;
+        __delay_ms(1000);
+    }
+}
+
+
 void main(void) {
     
     init_pic();
-    uint8_t rv = init_ds3232();
+    
+    uint8_t dout = 0b10101010;
+    uint8_t din  = 0;
+    
+    transfer_bytes(WR, &dout, 0x14, 1);
+    __delay_ms(1000);
+    transfer_bytes(RD, &din, 0x00, 1);
+    __delay_ms(1000);
+    blink_bits(din);
     
     while (1) {
-        blink(100);
+        //blink(100);
         //RB0 = 1; 
         
         //check_buttons(); // See if button is being pressed and react if so

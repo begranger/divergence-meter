@@ -106,6 +106,7 @@ uint8_t byte_in(bool last_byte) {
 uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, uint8_t num_bytes) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as inputs (lines high)
+    // Assumes that bus has been in idle longer than t_BUF = 4.7us
     
     // Signal transfer-start by bringing SDA low while SCL is high, then
     // bring SCL low as well
@@ -167,10 +168,4 @@ uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, ui
     SDA = 1;
     __delay_us(I2C_TCLK_US_DIV_3); // buffer
     return 0; 
-}
-
-
-uint8_t init_ds3232(void) {
-    // Make sure DS3232 (clock chip) is up and running
-    return 0;
 }
