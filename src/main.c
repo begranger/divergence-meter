@@ -32,15 +32,19 @@ void blink_bits(uint8_t to_blink) {
 void main(void) {
     
     init_pic();
+    while (sync_i2c(50)) {} // Bring I2C bus into known state
+
+    // Turn on LED to indicate startup completed successfully
+    RB0 = 1;
     
-    uint8_t dout = 0b10101010;
-    uint8_t din  = 0;
-    
-    transfer_bytes(WR, &dout, 0x14, 1);
-    __delay_ms(1000);
-    transfer_bytes(RD, &din, 0x00, 1);
-    __delay_ms(1000);
-    blink_bits(din);
+//    uint8_t dout = 0b10101010;
+//    uint8_t din  = 0;
+//    
+//    transfer_bytes(WR, &dout, 0x14, 1);
+//    __delay_ms(1000);
+//    transfer_bytes(RD, &din, 0x00, 1);
+//    __delay_ms(1000);
+//    blink_bits(din);
     
     while (1) {
         //blink(100);

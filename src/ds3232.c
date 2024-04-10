@@ -169,3 +169,41 @@ uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, ui
     __delay_us(I2C_TCLK_US_DIV_3); // buffer
     return 0; 
 }
+
+
+uint8_t sync_i2c(uint8_t num_clocks) {
+    // [Re]sync the I2C bus to a known state. Return 0 if successful, and a
+    // postive error code if not.
+    // Assumes that output regs on both pins are set to 0
+    // Does NOT assume anything about the state of SCL and SDA
+    
+    // Set SCL high, and 'release' SDA by setting pin to high impedence (SDA=1)
+    // Then the only way for SDA to be read as zero is if the DS3232 is pulling
+    // it low bc it's desynced or in some weird state. 
+    SCL = 1;
+    SDA = 1;
+    
+    // Toggle SCL a bunch and then check if the DS3232 has released SDA (if it
+    // was even holding it), and the value on the pin becomes 1. Note that the
+    // datasheet says to toggle SCL ~until~ SDA becomes 1, but we just do one
+    // set of toggles, check and return either way. This is bc I dont want to
+    // get stuck in a loop here- just tell caller that it didnt work, and they
+    // can try again if they want and/or do some other error handling
+    if (num_clocks == 0) {return 1;}
+    for (uint8_t i = 1; i <= num_clocks; i++) {
+        __delay_us(I2C_TCLK_US_DIV_3);
+        SCL = 0;
+        __delay_us(I2C_TCLK_US_DIV_3*2);
+        SCL = 1;
+    } // Leaves loop w SCL at 1, same as it started
+    
+    // Pause before checking SDA in case it goes high after last clock
+    __delay_us(I2C_TCLK_US_DIV_3);
+    
+    // If SDA is still not high (DS3232 pulling it down), sync failed
+    if (!I2C_SDA_PIN) {return 2;}
+            
+    // Otherwise, it has returned to high. And since SCL is also already 1, we
+    // return successful and w SCL+SDA in state expected by transfer_bytes
+    return 0;
+}
