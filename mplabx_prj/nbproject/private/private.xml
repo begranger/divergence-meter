@@ -6,6 +6,8 @@
             <file>file:/home/ben/Documents/divergence-meter/src/pic.c</file>
             <file>file:/home/ben/Documents/divergence-meter/src/main.c</file>
             <file>file:/home/ben/Documents/divergence-meter/src/i2c.h</file>
+            <file>file:/home/ben/Documents/divergence-meter/src/ds3232.c</file>
+            <file>file:/home/ben/Documents/divergence-meter/src/ds3232.h</file>
             <file>file:/home/ben/Documents/divergence-meter/src/i2c.c</file>
         </group>
     </open-files>

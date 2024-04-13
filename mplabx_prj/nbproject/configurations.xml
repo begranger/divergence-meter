@@ -7,6 +7,7 @@
       <itemPath>../src/pic.h</itemPath>
       <itemPath>../src/_XTAL_FREQ.h</itemPath>
       <itemPath>../src/i2c.h</itemPath>
+      <itemPath>../src/ds3232.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -18,6 +19,7 @@
       <itemPath>../src/main.c</itemPath>
       <itemPath>../src/pic.c</itemPath>
       <itemPath>../src/i2c.c</itemPath>
+      <itemPath>../src/ds3232.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

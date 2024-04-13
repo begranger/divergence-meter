@@ -7,7 +7,7 @@
 #define I2C_WR 0 // I2C transfer direction definition
 #define I2C_RD 1
 
-uint8_t i2c_transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, uint8_t num_bytes);
+uint8_t i2c_transfer_bytes(uint8_t tgrt_addr, bool direction, uint8_t* ctrl_data, uint8_t prph_addr, uint8_t num_bytes);
 uint8_t i2c_sync_intf(uint8_t num_clocks);
 
 #endif	/* I2C_H */
