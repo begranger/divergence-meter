@@ -2,10 +2,7 @@
 #include <xc.h>         // device macros
 #include "_XTAL_FREQ.h" // need for __delay_*s()
 #include "pic.h"        // pic init and subroutines
-#include "ds3232.h"     // clock chip init and subroutines
-
-#define WR 0 // I2C transfer directions
-#define RD 1
+#include "i2c.h"        // clock chip init and subroutines
 
 
 void blink(uint8_t n) {
@@ -32,7 +29,7 @@ void blink_bits(uint8_t to_blink) {
 void main(void) {
     
     init_pic();
-    while (sync_i2c(50)) {} // Bring I2C bus into known state
+    while (i2c_sync_intf(50)) {} // Bring I2C bus into known state
 
     // Turn on LED to indicate startup completed successfully
     RB0 = 1;

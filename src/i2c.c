@@ -1,5 +1,6 @@
 #include <xc.h>         // device macros
 #include <stdbool.h>    // boolean type macro (just unsigned char under hood)
+#include "i2c.h"        // need for RD/WR defs
 #include "_XTAL_FREQ.h" // need for __delay_*s()
 
 /* On init, we set the output regs on pins RA<1:0> to 0. Therefore by toggling
@@ -15,7 +16,8 @@
 #define I2C_ADDR 0x68        // I2C bus address of DS3232 chip (7 LSBs)
 #define I2C_TCLK_US_DIV_3 20 // 1/3 of I2C bus clock period in microseconds
 
-bool byte_out(uint8_t dout) {
+
+static bool byte_out(uint8_t dout) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as outputs (lines low)
     // Assumes that function is entered at/around the time SCL was brought low
@@ -57,7 +59,7 @@ bool byte_out(uint8_t dout) {
 }
 
 
-uint8_t byte_in(bool last_byte) {
+static uint8_t byte_in(bool last_byte) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as outputs (lines low)
 
@@ -98,12 +100,12 @@ uint8_t byte_in(bool last_byte) {
 /* Read or write the specified number of bytes to/from a peripheral on I2C bus
  * from/to the given array
  * Inputs:
- *   direction: 1 = read, 0 = write (matches I2C convention)
+ *   direction: transfer dir, I2C_RD or I2C_WR
  *   ctrl_addr: pointer to uint8_t array in controller to being transfer at
  *   prph_addr: address in the peripheral's memory map to begin transfer at
  *   num_bytes: self-explanatory
  * Returns 0 if successful, error code if not */
-uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, uint8_t num_bytes) {
+uint8_t i2c_transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, uint8_t num_bytes) {
     // Assumes that output regs on both pins are set to 0
     // Assumes that both pins are configured as inputs (lines high)
     // Assumes that bus has been in idle longer than t_BUF = 4.7us
@@ -118,9 +120,9 @@ uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, ui
     // Note: We always jamset mem pointer when reading. Doing
     // so requires 2 transfers, the first being a write of the
     // address to move pointer to. Therefore ALWAYS send the first
-    // I2C address as a write transfer (hence '| 0') below
+    // I2C address as a write transfer (hence '| I2C_WR') below
     // Note: ack is active low, so if zero is returned then all ok
-    if (byte_out((I2C_ADDR << 1) | 0)) {
+    if (byte_out((I2C_ADDR << 1) | I2C_WR)) {
         return 1;
     }
 
@@ -129,7 +131,7 @@ uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, ui
         return 2;
     }
 
-    if (direction) { // if read
+    if (direction == I2C_RD) { // if read
 
         // Execute repeated-start to then begin read
         __delay_us(I2C_TCLK_US_DIV_3); // buffer
@@ -142,7 +144,7 @@ uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, ui
         SCL = 0;
 
         // Transmit I2C address again, this time w R/!W = 1
-        if (byte_out((I2C_ADDR << 1) | 1)) {
+        if (byte_out((I2C_ADDR << 1) | I2C_RD)) {
             return 3;
         }
 
@@ -156,7 +158,7 @@ uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, ui
     else { // write
     
         for (uint8_t i = 0; i < num_bytes; i++) {
-            if (byte_out(ctrl_addr[i])) { return i+4; }
+            if (byte_out(ctrl_addr[i])) {return i+4;}
         }
     }
     
@@ -167,13 +169,14 @@ uint8_t transfer_bytes(bool direction, uint8_t* ctrl_addr, uint8_t prph_addr, ui
     __delay_us(I2C_TCLK_US_DIV_3); // t_SU:STO > 4.7us
     SDA = 1;
     __delay_us(I2C_TCLK_US_DIV_3); // buffer
+    
     return 0; 
 }
 
 
-uint8_t sync_i2c(uint8_t num_clocks) {
-    // [Re]sync the I2C bus to a known state. Return 0 if successful, and a
-    // postive error code if not.
+uint8_t i2c_sync_intf(uint8_t num_clocks) {
+    // [Re]sync the I2C interface to a known state. Return 0 if successful,
+    // and a postive error code if not.
     // Assumes that output regs on both pins are set to 0
     // Does NOT assume anything about the state of SCL and SDA
     
